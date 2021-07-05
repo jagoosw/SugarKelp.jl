@@ -1,10 +1,21 @@
 module Kelp
 
-using Base:Float64
 using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, DataFrames
 include("parameters.jl")
 
-function Equations(y, params, t)
+# Input parameters
+# t: time (days)
+# irr: irradiance (micro mol photons / m^2 / s)
+# temp: Temperature (deg C)
+# ex_n: External (to kelp) nitrate concentration (micro mol / L) 
+# u: Current speed (relative to kelp) (m/s)
+
+# Variables
+# a: Frond area of individual kelp (dm^2)
+# n: Nitrogen reserve relative to dry weight (gN/(g sw))
+# c: Carbon reserve relative to dry weight (gC/(g sw))
+
+function equations!(y, params, t)
     a, n, c = y[1], y[2], y[3]
 
     # Check that values are valid
@@ -20,7 +31,7 @@ function Equations(y, params, t)
     irr = irr_arr(t)# irradiance
     ex_n = ex_n_arr(t)# Ambient nitrate concentration, mmol/L
 
-    if (c < C_min)
+    if c < C_min
         a = a - a * (C_min - c) / C_struct
     end
 
@@ -47,11 +58,11 @@ function Equations(y, params, t)
 
     f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
 
-    if (temp < 10) # effect of temperature on growth rate
+    if temp < 10 # effect of temperature on growth rate
         f_temp = 0.08 * temp + 0.2
-    elseif (temp < 15)
+    elseif temp < 15
         f_temp = 1
-    elseif (temp < 19)
+    elseif temp < 19
         f_temp = 19 / 4 - temp / 4
     else
         f_temp = 0
@@ -70,8 +81,8 @@ function Equations(y, params, t)
     return (vcat(da, dn, dc))
 end
 
-function Defaults(t_i, t_e, u)
-    t_arr, irr_arr, ex_n_arr = Float64[], Float64[], Float64[]
+function defaults(t_i, t_e, u)
+    t_arr, irr_arr, ex_n_arr = [],[],[]
     for t = t_i:t_e
         d = trunc(Int, mod(floor(t), 365) + 1)
         push!(t_arr, 6 * cos((d - 250) * 2 * pi / 365) + 8)
@@ -87,8 +98,8 @@ function Defaults(t_i, t_e, u)
     return(u_arr, t_arr, irr_arr, ex_n_arr)
 end
 
-function Solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
-    delts = Float64[]
+function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
+    delts = []
     for j = 1:365
         theta = 0.2163108 + 2 * atan(0.9671396 * tan(0.00860 * (j - 186))) # revolution angle from day of the year
         dec = asin(0.39795 * cos(theta)) # sun declination angle 
@@ -110,16 +121,16 @@ function Solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
 
     y_0 = vcat(a_0, n_0, c_0)
 
-    solver = ODEProblem(Equations, y_0, (t_i, t_i + nd), params)
+    solver = ODEProblem(equations!, y_0, (t_i, t_i + nd), params)
     solution = solve(solver, Vern8()) # Not sure this is the best algorithm but ran fastest of the ones I checked
 
     results =
-        DataFrame(area=Float64[], nitrogen=Float64[], carbon=Float64[])
+        DataFrame(area=[], nitrogen=[], carbon=[])
     for val in solution.u
         push!(results, (val))
     end
 
-    return(solution,results)
+    return(solution, results)
 end
 
 end # module
