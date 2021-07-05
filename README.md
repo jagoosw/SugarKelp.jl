@@ -1,6 +1,6 @@
 # Kelp.jl
 
-Implimentation of [Broch and Slagstad model of the growth and composition of _Saccharina latissima_  Kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
+Implementation of [Broch and Slagstad model of the growth and composition of _Saccharina latissima_  Kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
 The model is solved by using `Kelp.solvekelp` with inputs:
 - `t_i` the start day (where `t_i=1` is the first of January)
