@@ -2,7 +2,7 @@ using Plots
 
 include("../src/Kelp.jl")
 
-t_i = 4.5 * 30
+t_i = 8.5 * 30
 nd = 5 * 365
 lat = 45
 u = 0.15
@@ -28,14 +28,14 @@ for t in solution.t
     push!(n_disp,ex_n(t))
 end
 
-t_disp=solution.t.-(solution.t[length(solution.t)] - 365)
-t_lim=(0,365)
+t_disp=solution.t.-(solution.t[length(solution.t)]-365-t_i)
+t_lim=(t_i,365+t_i)
 
-plot!(t_disp,temp_disp,sp=1,ylabel="Temperature/degC",xlim=(0,365))
-plot!(t_disp,irr_disp,sp=2,ylabel="Irradiance/micro mol photons / m^2 / s",xlim=(0,365))
-plot!(t_disp,n_disp,sp=3,ylabel="Nitrate/micro mol / L",xlim=(0,365))
-plot!(t_disp,results.area,sp=4,xlabel="Day of year", ylabel="Frond Area/dm^2",xlim=(0,365))
-plot!(t_disp,results.nitrogen,sp=5, xlabel="Day of year", ylabel="Nitrogen reserve/gN/g sw",xlim=(0,365))
-plot!(t_disp,results.carbon,sp=6, xlabel="Day of year", ylabel="Carbon reserve/gC/g sw",xlim=(0,365))
+plot!(t_disp,temp_disp,sp=1,ylabel="Temperature/degC",xlim=t_lim)
+plot!(t_disp,irr_disp,sp=2,ylabel="Irradiance/micro mol photons / m^2 / s",xlim=t_lim)
+plot!(t_disp,n_disp,sp=3,ylabel="Nitrate/micro mol / L",xlim=t_lim)
+plot!(t_disp,results.area,sp=4,xlabel="Day of year", ylabel="Frond Area/dm^2",xlim=t_lim)
+plot!(t_disp,results.nitrogen,sp=5, xlabel="Day of year", ylabel="Nitrogen reserve/gN/g sw",xlim=t_lim)
+plot!(t_disp,results.carbon,sp=6, xlabel="Day of year", ylabel="Carbon reserve/gC/g sw",xlim=t_lim)
 
 display(display(plot!()))
