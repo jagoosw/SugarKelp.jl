@@ -1,4 +1,4 @@
-# Kelp.jl
+# Kelp
 
 Implementation of [Broch and Slagstad model of the growth and composition of _Saccharina latissima_  Kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
