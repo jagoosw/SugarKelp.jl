@@ -44,7 +44,12 @@ function equations!(y, params, t)
             exp(T_APH / T_PH - T_APH / (temp + 273.15))
         )
     beta_func(x) = p_max - alpha * I_sat / log(1 + alpha / x)
-    beta = fzero(beta_func, 1e-9)# not sure how to set a particular number of itterations here
+    beta = find_zeros(beta_func,0,1)
+    if length(beta)<1#the value of x can get very (10^-30) small so the root isn't found so this is a but
+        beta=10^-30
+    else
+        beta=beta[1]
+    end#This may never be an issue again and was bevcause I was using the wrong units for irr
     p_s = alpha * I_sat / log(1 + alpha / beta)
 
     # Evaluate functions
@@ -82,7 +87,7 @@ function equations!(y, params, t)
 end
 
 function defaults(t_i, t_e, u)
-    t_arr, irr_arr, ex_n_arr = [],[],[]
+    t_arr, irr_arr, ex_n_arr = [], [], []
     for t = t_i:t_e
         d = trunc(Int, mod(floor(t), 365) + 1)
         push!(t_arr, 6 * cos((d - 250) * 2 * pi / 365) + 8)
