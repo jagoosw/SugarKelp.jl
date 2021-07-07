@@ -17,12 +17,12 @@ mu_max = 0.18    # Maximal area specific growth ratio
 N_min = 0.01     # Minimal nitrogen reserve
 N_max = 0.022    # Maximal nitrogen reserve
 N_struct = 0.01  # Amount of nitrogen per unit dry weight of structural mass
-P_1 = 1.22e-3 * 24    # Maximal photosynthetic rate at T = T?P1K converted to day^-1
-P_2 = 1.44e-3 * 24    # Maximal photosynthetic rate at T = T?P2K converted to day^-1
+P_1 = 1.22e-3    # Maximal photosynthetic rate at T = T?P1K converted to day^-1
+P_2 = 1.44e-3    # Maximal photosynthetic rate at T = T?P2K converted to day^-1
 a_1 = 0.85       # Photoperiod parameter
 a_2 = 0.3        # Photoperiod parameter
-R_1 = 2.785e-4 * 24   # Respiration rate at T = TR1, converted to days^-1
-R_2 = 5.429e-4 * 24   # Respiration rate at T = TR2, converted to days^-1
+R_1 = 2.785e-4   # Respiration rate at T = TR1, converted to days^-1
+R_2 = 5.429e-4   # Respiration rate at T = TR2, converted to days^-1
 T_R1 = 285       # Reference temperature for respiration (K)
 T_R2 = 290       # Reference temperature for respiration (K)
 T_P1 = 285       # Reference temperature for photosynthesis (K)
