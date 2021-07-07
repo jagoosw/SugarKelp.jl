@@ -130,8 +130,9 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
     solution = solve(solver, Vern8()) # Not sure this is the best algorithm but ran fastest of the ones I checked
 
     results =
-        DataFrame(area=[], nitrogen=[], carbon=[])
-    for val in solution.u
+        DataFrame(area=[], nitrogen=[], carbon=[], time=[])
+    for (ind,val) in enumerate(solution.u)
+        push!(val,solution.t[ind])
         push!(results, (val))
     end
 

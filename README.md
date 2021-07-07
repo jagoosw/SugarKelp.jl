@@ -60,6 +60,8 @@ plot!(t_disp,results.carbon,sp=6, xlabel="Day of year", ylabel="Carbon reserve/g
 
 display(display(plot!()))
 ```
+The results will look something like this:
+![A grid of graphs showing the variation of various parameters across the year, temperature behaves sinusoidally and the irradiance and nitrate concentration have spikes. The Frond area, nitrogen reserve and carbon reserve are also shown.](default.png)
 
 ## Dependencies
 (Don't know what the `requirments.txt` equivalent is in Julia)
