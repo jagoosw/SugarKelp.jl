@@ -51,7 +51,7 @@ a=[29.264,29.273,29.273,29.273,29.273,29.273,29.273,29.273,29.273,29.273,29.273,
 #structural to dry weight conversion (paper plots g/g dry weight where as g/g structural weight is used in calculations)
 n_factor=(results.nitrogen.-N_min).*K_N
 c_factor=(results.carbon.-C_min).*K_C
-w_factor=.5 .+n_factor .+c_factor .+C_min .+N_min
+w_factor=1 .+n_factor .+c_factor .+C_min .+N_min
 
 plot!(t_disp,results.area,sp=4,xlabel="Month", ylabel="Frond Area/dm^2",ylim=(30,45),label="Model, update")
 plot!(a_t,a,label="Paper",sp=4)
