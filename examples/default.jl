@@ -40,7 +40,7 @@ plot!(t_disp,results.carbon,sp=6, xlabel="Month", ylabel="Carbon reserve/gC/g sw
 
 xticks=[]
 for day in t_i+nd-365:30:nd+t_i
-    push!(xticks,Dates.format((Date(2015,8,15)+Dates.Day(day)),"U")[1])
+    push!(xticks,Dates.format((Date(2015,1,1)+Dates.Day(day)),"U")[1])
 end
 
 plot!(xticks=([t_i+nd-365:30:nd+t_i;],xticks),legend=false,margin=-3mm)
