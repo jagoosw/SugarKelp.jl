@@ -81,7 +81,7 @@ function equations!(y, params, t)
 
     da = (mu - nu) * a
     dn = j / K_A - mu * (n + N_struct)
-    dc = 1 / K_A * (p * (1 - e - r)) - mu * (c + C_struct)
+    dc = 1 / K_A * (p * (1 - e) - r) - mu * (c + C_struct)
 
     return (vcat(da, dn, dc))
 end
