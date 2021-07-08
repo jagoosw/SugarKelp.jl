@@ -44,12 +44,7 @@ function equations!(y, params, t)
             exp(T_APH / T_PH - T_APH / (temp + 273.15))
         )
     beta_func(x) = p_max - alpha * I_sat / log(1 + alpha / x)
-    beta = find_zeros(beta_func,0,1)
-    if length(beta)<1#the value of x can get very (10^-30) small so the root isn't found so this is a but
-        beta=10^-30
-    else
-        beta=beta[1]
-    end#This may never be an issue again and was bevcause I was using the wrong units for irr
+    beta = find_zero(beta_func, (0,0.1), Bisection())
     p_s = alpha * I_sat / log(1 + alpha / beta)
 
     # Evaluate functions
