@@ -35,7 +35,7 @@ temp_disp = [];irr_disp = [];n_disp = [];
 t_disp = solution.t
 
 pyplot()
-# plot(layout=grid(2, 3))
+plot(layout=grid(2, 3))
 
 plot!(temp_t,temp,sp=1,ylabel="Temperature/degC",legend=true)
 plot!(irr_t,irr,sp=2,ylabel="Irradiance/micro mol photons / m^2 / s",legend=true)
