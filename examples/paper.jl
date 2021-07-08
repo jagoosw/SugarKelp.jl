@@ -3,7 +3,7 @@ using Plots, Dates, Measures, Interpolations, RollingFunctions, NumericalIntegra
 include("../src/Kelp.jl")
 include("../src/parameters.jl")
 
-offset = 212-25
+offset = 212 - 25
 # collected from fig2 of origional paper with https://www.graphreader.com/
 temp_t = [20.956,31.796,43.358,65.036,67.927,82.38,86.715,99.723,111.285,124.292,147.416,209.562,238.467,296.277,328.073,356.978,394.555,412.62]
 temp = [12.255,14.387,13.177,12.947,12.082,12.313,11.333,11.103,9.663,10.181,6.609,3.383,2.461,8.107,12.658,15.251,14.617,13.811]
@@ -15,16 +15,16 @@ irr = [8.3951,7.4074,5.5967,4.2798,2.7984,1.6461,0.9877,0.4938,0.3292,0.9877,3.6
 irr .*= 10^6 / (24 * 60 * 60)#
 temp_t .+= offset ;no3_t .+= offset ;irr_t .+= offset 
 
-t_i = 31*4+28+2*30.0+15
+t_i = 31 * 4 + 28 + 2 * 30.0 + 15
 nd = 365
 lat = 60.25
 u = 0.15
 
 u_arr = Interpolations.LinearInterpolation([t_i:t_i + nd;], fill(u, Int(nd + 1)))
 
-temp_arr = Interpolations.LinearInterpolation(temp_t, temp,extrapolation_bc=Line())
-no3_arr = Interpolations.LinearInterpolation(no3_t, no3,extrapolation_bc=Line())
-irr_arr = Interpolations.LinearInterpolation(irr_t, irr,extrapolation_bc=Line())
+temp_arr = Interpolations.LinearInterpolation(temp_t, temp, extrapolation_bc=Line())
+no3_arr = Interpolations.LinearInterpolation(no3_t, no3, extrapolation_bc=Line())
+irr_arr = Interpolations.LinearInterpolation(irr_t, irr, extrapolation_bc=Line())
 
 a_0 = 30;n_0 = 0.01;c_0 = 0.6
 
@@ -35,13 +35,13 @@ temp_disp = [];irr_disp = [];n_disp = [];
 t_disp = solution.t
 
 pyplot()
-plot(layout=grid(2, 3))
+# plot(layout=grid(2, 3))
 
 plot!(temp_t,temp,sp=1,ylabel="Temperature/degC",legend=true)
 plot!(irr_t,irr,sp=2,ylabel="Irradiance/micro mol photons / m^2 / s",legend=true)
 plot!(no3_t,no3,sp=3,ylabel="Nitrate/micro mol / L",legend=true)
 
-offset+=25
+offset += 25
 # sjotun 1993
 c_t = [10.016,100.156,130.973,164.872,192.607,224.965,266.568,291.222,343.611,409.097] .+ offset 
 c = [0.312,0.349,0.292,0.195,0.224,0.266,0.281,0.307,0.363,0.373]
@@ -72,8 +72,8 @@ plot!(c2_t,c2,label="Paper",sp=6)
 t_ticks = []
 val_ticks = []
 for day in t_i:t_i + nd
-    date=Date(1981, 1, 1) + Dates.Day(day)
-    if Dates.format(date,"d")=="1"
+    date = Date(1981, 1, 1) + Dates.Day(day)
+    if Dates.format(date, "d") == "1"
         push!(t_ticks, day)
         push!(val_ticks, Dates.format(date, "U")[1])
     end
@@ -86,6 +86,26 @@ display(display(plot!()))
 c_fixed = integrate(solution.t[2:end], diff(results.carbon) .* (K_A .* results.area[2:end]))
 
 mu = []
+
+delts = []
+for j = 1:365
+    theta = 0.2163108 + 2 * atan(0.9671396 * tan(0.00860 * (j - 186))) # revolution angle from day of the year
+    dec = asin(0.39795 * cos(theta)) # sun declination angle 
+    p = 0.8333 # sunrise/sunset is when the top of the sun is apparently even with horizon
+    push!(
+            delts,
+            24 -
+            (24 / pi) * acos(
+                (sin(p * pi / 180) + sin(lat * pi / 180) * sin(dec)) /
+                (cos(lat * pi / 180) * cos(dec)),
+            ),
+        )
+end
+DeltaL = diff(delts)
+push!(DeltaL, DeltaL[364])
+NormDeltaL = DeltaL / findmax(DeltaL)[1]
+
+    
 for (ind, t) in enumerate(solution.t)
     d = trunc(Int, mod(floor(t), 365) + 1)
     lambda =  NormDeltaL[d] # This seems wrong to be interpolated because "change in day length" is discrete so going to stick choosing day numbers
@@ -110,7 +130,7 @@ for (ind, t) in enumerate(solution.t)
     push!(mu, f_area * f_temp * f_photo * min(1 - N_min / results.nitrogen[ind], 1 - C_min / results.carbon[ind]))
 end
 
-gross_a = integrate(solution.t,mu.*results.area)
+gross_a = integrate(solution.t, mu .* results.area)
 
 println("Total carbon fixed: $c_fixed /g")
 println("Gross frond area: $gross_a /dm^2")
