@@ -14,54 +14,17 @@ The model is solved by using `Kelp.solvekelp` with inputs:
 
 `Kelp.defaults` generates default series for temperature, irradiance and nitrogen as used by the paper.
 
+## Current problems
+Now that some issues have been ironed out I can't quite get the results to match up with the results from the paper in Figure 3 using the data from Figure 2. The area looks good and the total carbon fixed and gross area are fairly close to their values (105g/136dm^2 vs 125g/131dm^2) but the plots of carbon/nitrogen are not right. Hopefully the problem is just the conversion from gN/g sw to gN/ g dw (in _Important Derived Quantities_ in the paper). 
+![Figure 3 equivilant.](img/paper_comparison.png)
+
+I have also noticed that the total carbon and area are very sensitive to the start day and the alignment of the data from the paper with the date (which is quite hard to tell because the plots are so small and the axis labels confusing).
+
 ## Example
 > :warning: This may be common knowledge but you have to run the example like `julia -i examples/default.jl` (not just `julia exa...`) otherwise the graphs immediately disappear.
-`example/default.jl` runs the default values:
-```
-using Plots
 
-include("../src/Kelp.jl")
-
-t_i = 4.5 * 30
-nd = 5 * 365
-lat = 45
-u = 0.15
-
-#generate the time series as done in paper
-u_arr, temp, irr, ex_n = Kelp.defaults(t_i, t_i + nd, u)
-
-a_0 = 0.56;n_0 = 0.018;c_0 = 0.25
-
-#solve
-solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp, irr, ex_n, lat, a_0, n_0, c_0)
-
-#plots
-pyplot()
-
-display(display(plot(layout=grid(2, 3))))
-
-temp_disp=[];irr_disp=[];n_disp=[];
-
-for t in solution.t
-    push!(temp_disp,temp(t))
-    push!(irr_disp,irr(t))
-    push!(n_disp,ex_n(t))
-end
-
-t_disp=solution.t.-(solution.t[length(solution.t)] - 365)
-t_lim=(0,365)
-
-plot!(t_disp,temp_disp,sp=1,ylabel="Temperature/degC",xlim=(0,365))
-plot!(t_disp,irr_disp,sp=2,ylabel="Irradiance/micro mol photons / m^2 / s",xlim=(0,365))
-plot!(t_disp,n_disp,sp=3,ylabel="Nitrate/micro mol / L",xlim=(0,365))
-plot!(t_disp,results.area,sp=4,xlabel="Day of year", ylabel="Frond Area/dm^2",xlim=(0,365))
-plot!(t_disp,results.nitrogen,sp=5, xlabel="Day of year", ylabel="Nitrogen reserve/gN/g sw",xlim=(0,365))
-plot!(t_disp,results.carbon,sp=6, xlabel="Day of year", ylabel="Carbon reserve/gC/g sw",xlim=(0,365))
-
-display(display(plot!()))
-```
-The results will look something like this:
-![A grid of graphs showing the variation of various parameters across the year, temperature behaves sinusoidally and the irradiance and nitrate concentration have spikes. The Frond area, nitrogen reserve and carbon reserve are also shown.](default.png)
+`example/default.jl` runs the default values and the results will look something like this:
+![A grid of graphs showing the variation of various parameters across the year, temperature behaves sinusoidally and the irradiance and nitrate concentration have spikes. The Frond area, nitrogen reserve and carbon reserve are also shown.](img/default.png)
 
 ## Dependencies
 (Don't know what the `requirments.txt` equivalent is in Julia)
