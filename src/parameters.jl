@@ -1,12 +1,12 @@
 # Model parameters
 A_0 = 6          # Growth rate adjustment parameter
-alpha = 3.75e-5*24 # photosynthetic efficiency 
+alpha = 3.75e-5 * 24 # photosynthetic efficiency 
 C_min = 0.01     # Minimal carbon reserve
 C_struct = 0.2   # Amount of carbon per unit dry weight of structural mass
 gamma = 0.5      # Exudation parameter
 epsilon = 0.22   # Frond erosion parameter
 I_sat = 200      # Irradiance for maximal photosynthesis
-J_max = 1.4e-4 *24# Maximal nitrate uptake (gN/dm^2/h converted to gN/dm^2/day)
+J_max = 1.4e-4 * 24# Maximal nitrate uptake (gN/dm^2/h converted to gN/dm^2/day)
 K_A = 0.6        # Structural dry weight per unit area
 K_DW = 0.0785    # Dry weight to wet weight ratio of structural mass
 K_C = 2.1213     # Mass of carbon reserves per gram carbon
@@ -17,12 +17,12 @@ mu_max = 0.18    # Maximal area specific growth ratio
 N_min = 0.01     # Minimal nitrogen reserve
 N_max = 0.022    # Maximal nitrogen reserve
 N_struct = 0.01  # Amount of nitrogen per unit dry weight of structural mass
-P_1 = 1.22e-3    # Maximal photosynthetic rate at T = T?P1K converted to day^-1
-P_2 = 1.44e-3    # Maximal photosynthetic rate at T = T?P2K converted to day^-1
+P_1 = 1.22e-3 * 24    # Maximal photosynthetic rate at T = T?P1K converted to day^-1
+P_2 = 1.44e-3 * 24    # Maximal photosynthetic rate at T = T?P2K converted to day^-1
 a_1 = 0.85       # Photoperiod parameter
 a_2 = 0.3        # Photoperiod parameter
-R_1 = 2.785e-4   # Respiration rate at T = TR1,
-R_2 = 5.429e-4   # Respiration rate at T = TR2,
+R_1 = 2.785e-4 * 24   # Respiration rate at T = TR1,
+R_2 = 5.429e-4 * 24   # Respiration rate at T = TR2,
 T_R1 = 285       # Reference temperature for respiration (K)
 T_R2 = 290       # Reference temperature for respiration (K)
 T_P1 = 285       # Reference temperature for photosynthesis (K)
