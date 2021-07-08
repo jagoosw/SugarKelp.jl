@@ -38,11 +38,16 @@ plot!(t_disp,results.area,sp=4,xlabel="Month", ylabel="Frond Area/dm^2",xlim=t_l
 plot!(t_disp,results.nitrogen,sp=5, xlabel="Month", ylabel="Nitrogen reserve/gN/g sw",xlim=t_lim,label="Analytical inputs")
 plot!(t_disp,results.carbon,sp=6, xlabel="Month", ylabel="Carbon reserve/gC/g sw",xlim=t_lim,label="Analytical inputs")
 
-xticks=[]
-for day in t_i:30:t_i+365
-    push!(xticks,Dates.format((Date(2015,1,1)+Dates.Day(day)),"U")[1])
+t_ticks = []
+val_ticks = []
+for day in t_i:t_i + nd
+    date=Date(1981, 1, 1) + Dates.Day(day)
+    if Dates.format(date,"d")=="1"
+        push!(t_ticks, day)
+        push!(val_ticks, Dates.format(date, "U")[1])
+    end
 end
 
-plot!(xticks=([t_i:30:t_i+365;],xticks),margin=-3mm)#legend=false)
+plot!(xticks=(t_ticks, val_ticks),margin=-3mm)#legend=false)
 
 display(display(plot!()))
