@@ -16,12 +16,17 @@ include("parameters.jl")
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 
 function equations!(y, params, t)
-    a, n, c = y[1], y[2], y[3]
+    a, n, c = y[1], y[2], y[3]; c0=copy(c)
 
     # Check that values are valid
     #n = findmax((n, N_min))[1]
     #n = findmin((n, N_max))[1]
     #c = findmax((c, C_min))[1]
+
+    if c<C_min
+        c=C_min
+        a-= a * (C_min - c) / C_struct
+    end
 
     u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL =
         params[1], params[2], params[3], params[4], params[5]
@@ -30,11 +35,6 @@ function equations!(y, params, t)
     temp = temp_arr(t)# Temperature
     irr = irr_arr(t)# irradiance
     ex_n = ex_n_arr(t)# Ambient nitrate concentration, mmol/L
-
-    if c < C_min
-        a = a - a * (C_min - c) / C_struct
-        c = C_min
-    end
 
     # Photosynthetic saturation equation
     # maxinum photosynthetic rate
@@ -82,6 +82,11 @@ function equations!(y, params, t)
     da = (mu - nu) * a
     dn = j / K_A - mu * (n + N_struct)
     dc = 1 / K_A * (p * (1 - e) - r) - mu * (c + C_struct)
+    
+    if c0 < C_min
+        da -= a * (C_min - c) / C_struct
+        dc = c-C_min
+    end 
 
     return (vcat(da, dn, dc))
 end
@@ -128,7 +133,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
     y_0 = vcat(a_0, n_0, c_0)
 
     solver = ODEProblem(equations!, y_0, (t_i, t_i + nd), params)
-    solution = solve(solver, Vern8()) # Not sure this is the best algorithm but ran fastest of the ones I checked
+    solution = solve(solver, Vern8(), dt=1, adaptive=false) # Not sure this is the best algorithm but ran fastest of the ones I checked
 
     results =
         DataFrame(area=[], nitrogen=[], carbon=[], time=[])
