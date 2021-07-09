@@ -19,9 +19,9 @@ function equations!(y, params, t)
     a, n, c = y[1], y[2], y[3]
 
     # Check that values are valid
-    n = findmax((n, N_min))[1]
-    n = findmin((n, N_max))[1]
-    c = findmax((c, C_min))[1]
+    #n = findmax((n, N_min))[1]
+    #n = findmin((n, N_max))[1]
+    #c = findmax((c, C_min))[1]
 
     u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL =
         params[1], params[2], params[3], params[4], params[5]
@@ -33,6 +33,7 @@ function equations!(y, params, t)
 
     if c < C_min
         a = a - a * (C_min - c) / C_struct
+        c = C_min
     end
 
     # Photosynthetic saturation equation
@@ -43,8 +44,10 @@ function equations!(y, params, t)
             exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
             exp(T_APH / T_PH - T_APH / (temp + 273.15))
         )
-    beta_func(x) = p_max - alpha * I_sat / log(1 + alpha / x)
+
+    beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x))*(alpha/(alpha+x))*(x/(alpha+x))^(x/alpha)
     beta = find_zero(beta_func, (0,0.1), Bisection())
+
     p_s = alpha * I_sat / log(1 + alpha / beta)
 
     # Evaluate functions
@@ -58,17 +61,19 @@ function equations!(y, params, t)
 
     f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
 
-    if temp < 10 # effect of temperature on growth rate
+    if -1.8 <= temp < 10 # effect of temperature on growth rate
         f_temp = 0.08 * temp + 0.2
-    elseif temp < 15
+    elseif 10 <= temp <= 15
         f_temp = 1
-    elseif temp < 19
+    elseif 15 < temp <=19
         f_temp = 19 / 4 - temp / 4
-    else
+    elseif t>19
         f_temp = 0
+    else
+        throw()
     end
 
-    f_photo = a_1 * (1 + sign(lambda) * sqrt(abs(lambda))) + a_2
+    f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
 
     mu = f_area * f_temp * f_photo * min(1 - N_min / n, 1 - C_min / c) # gross area specific growth rate
     nu = 1e-6 * exp(epsilon * a) / (1 + 1e-6 * (exp(epsilon * a) - 1)) # front erosion
@@ -113,6 +118,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
             ),
         )
     end
+
     DeltaL = diff(delts)
     push!(DeltaL, DeltaL[364])
     NormDeltaL = DeltaL / findmax(DeltaL)[1]
