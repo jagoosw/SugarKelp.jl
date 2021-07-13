@@ -8,12 +8,9 @@ offset = 4*31+28+30*2.0
 temp_file=CSV.read("examples/b&s_temp.csv",DataFrame);sort!(temp_file);temp_t=temp_file.day;temp=temp_file.temp
 no3_file=CSV.read("examples/b&s_no3.csv",DataFrame);sort!(no3_file);no3_t=no3_file.day;no3=no3_file.no3
 irr_file=CSV.read("examples/b&s_irr.csv",DataFrame);sort!(irr_file);irr_t=irr_file.day;irr=irr_file.irr
-
-# no3 ./= 1
-irr .*= 10^6 / (24 * 60 * 60)#
 temp_t .+= offset ;no3_t .+= offset ;irr_t .+= offset
 
-irr .*= exp(-0.07*13) # Background attenuation is set to 0.07m^-1(?)
+#irr .*= exp(-0.07*13) # Background attenuation is set to 0.07m^-1(?)
 
 t_i = offset+12
 nd = 365+16
@@ -29,8 +26,6 @@ irr_arr = Interpolations.LinearInterpolation(irr_t, irr, extrapolation_bc=Flat()
 a_0 = 30;n_0 = 0.01;c_0 = 0.6
 
 solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp_arr, irr_arr, no3_arr, lat, a_0, n_0, c_0)
-
-t_disp = solution.t
 
 pyplot()
 plot(layout=grid(2, 3))
@@ -53,16 +48,16 @@ n_factor = (results.nitrogen .- N_min) .* K_N
 c_factor = (results.carbon .- C_min) .* K_C
 w_factor = 1 .+ n_factor .+ c_factor .+ C_min .+ N_min
 
-plot!(t_disp,results.area,sp=4,xlabel="Month", ylabel="Frond Area/dm^2",ylim=(30, 45),label="Model")
-plot!(area_t,area,label="Paper",sp=4)
+plot!(results.time,results.area,sp=4,xlabel="Month", ylabel="Frond Area/dm^2",ylim=(29, 46),label="Model")
+plot!(area_t,area,label="Broch and Slagstad, 2012 (model)",sp=4)
 
-plot!(t_disp,(results.nitrogen .+ N_struct) ./ w_factor,sp=5, xlabel="Month", ylabel="Nitrogen reserve/gN/g dw",label="Model")
+plot!(results.time,(results.nitrogen .+ N_struct) ./ w_factor,sp=5, xlabel="Month", ylabel="Nitrogen reserve/gN/g dw",label="Model")
 plot!(n_t,n,sp=5,seriestype=:scatter, label="Sjotun, 1993")
-plot!(n2_t,n2,label="Paper",sp=5)
+plot!(n2_t,n2,label="Broch and Slagstad, 2012 (model)",sp=5)
 
-plot!(t_disp,(results.carbon .+ C_struct) ./ w_factor,sp=6, xlabel="Month", ylabel="Carbon reserve/gC/g dw",label="Model")
+plot!(results.time,(results.carbon .+ C_struct) ./ w_factor,sp=6, xlabel="Month", ylabel="Carbon reserve/gC/g dw",label="Model")
 plot!(c_t,c,sp=6,seriestype=:scatter, label="Sjotun, 1993",legend=:bottomleft)
-plot!(c2_t,c2,label="Paper",sp=6)
+plot!(c2_t,c2,label="Broch and Slagstad, 2012 (model)",sp=6)
 
 t_ticks = []
 val_ticks = []
@@ -75,10 +70,10 @@ for day in t_i:t_i + nd
 end
 
 plot!(xticks=(t_ticks, val_ticks),margin=-3mm)
-plot!(top_margin=0mm)
+plot!(top_margin=0mm,legend=false)
 display(display(plot!()))
 
-c_fixed = integrate(solution.t[2:end], diff(results.carbon) .* (K_A .* results.area[2:end]))
+#=c_fixed = integrate(solution.t[2:end], diff(results.carbon) .* (K_A .* results.area[2:end]))
 
 mu = []
 
@@ -128,4 +123,4 @@ end
 gross_a = integrate(solution.t, mu .* results.area)
 
 println("Total carbon fixed: $c_fixed /g")
-println("Gross frond area: $gross_a /dm^2")
+println("Gross frond area: $gross_a /dm^2")=#

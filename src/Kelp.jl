@@ -18,11 +18,6 @@ include("parameters.jl")
 function equations!(y, params, t)
     a, n, c = y[1], y[2], y[3]; c0=copy(c)
 
-    # Check that values are valid
-    #n = findmax((n, N_min))[1]
-    #n = findmin((n, N_max))[1]
-    #c = findmax((c, C_min))[1]
-
     if c<C_min
         c=C_min
         a-= a * (C_min - c) / C_struct
@@ -49,6 +44,7 @@ function equations!(y, params, t)
     beta = find_zero(beta_func, (0,0.1), Bisection())
 
     p_s = alpha * I_sat / log(1 + alpha / beta)
+
 
     # Evaluate functions
     p = p_s * (1 - exp(-alpha * irr / p_s)) * exp(-beta * irr / p_s) # gross photosynthesis
@@ -77,13 +73,13 @@ function equations!(y, params, t)
 
     mu = f_area * f_temp * f_photo * min(1 - N_min / n, 1 - C_min / c) # gross area specific growth rate
     nu = 1e-6 * exp(epsilon * a) / (1 + 1e-6 * (exp(epsilon * a) - 1)) # front erosion
-    j = J_max * ex_n / (K_X + ex_n) * (N_max - n) / (N_max - N_min) * (1 - exp(-u / U_0p65)) # nitrate uptake rate
+    j = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65)) # nitrate uptake rate
 
     da = (mu - nu) * a
     dn = j / K_A - mu * (n + N_struct)
-    dc = 1 / K_A * (p * (1 - e) - r) - mu * (c + C_struct)
+    dc = (p * (1 - e) - r)/K_A - mu * (c + C_struct)
     
-    if c0 < C_min
+    if c0 < C_min#This needs to be adjusted if the timetep is not 1
         da -= a * (C_min - c) / C_struct
         dc = c-C_min
     end 
@@ -110,7 +106,7 @@ end
 
 function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
     delts = []
-    for j = 1:365
+    #=for j = 1:365
         theta = 0.2163108 + 2 * atan(0.9671396 * tan(0.00860 * (j - 186))) # revolution angle from day of the year
         dec = asin(0.39795 * cos(theta)) # sun declination angle 
         p = 0.8333 # sunrise/sunset is when the top of the sun is apparently even with horizon
@@ -122,8 +118,12 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
                 (cos(lat * pi / 180) * cos(dec)),
             ),
         )
-    end
-
+    end=#
+    for d=1:365
+        j=mod(d-354,365)
+        dec=23.5*(pi/180)*sin((pi/180)*360*(j-91)/365)
+        push!(delts,(180/pi)*0.133*acos(-tan(lat*pi/180)*tan(dec)))
+    end#changing to how the book did it that they got it from makes no difference
     DeltaL = diff(delts)
     push!(DeltaL, DeltaL[364])
     NormDeltaL = DeltaL / findmax(DeltaL)[1]
@@ -137,8 +137,8 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
 
     results =
         DataFrame(area=[], nitrogen=[], carbon=[], time=[])
-    for (ind,val) in enumerate(solution.u)
-        push!(val,solution.t[ind])
+    for (ind, val) in enumerate(solution.u)
+        push!(val, solution.t[ind])
         push!(results, (val))
     end
 
