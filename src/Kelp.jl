@@ -16,11 +16,11 @@ include("parameters.jl")
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 
 function equations!(y, params, t)
-    a, n, c = y[1], y[2], y[3]; c0=copy(c)
+    a, n, c = y[1], y[2], y[3]; c0 = copy(c)
 
-    if c<C_min
-        c=C_min
-        a-= a * (C_min - c) / C_struct
+    if c < C_min
+        c = C_min
+        a -= a * (C_min - c) / C_struct
     end
 
     u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL =
@@ -40,8 +40,8 @@ function equations!(y, params, t)
             exp(T_APH / T_PH - T_APH / (temp + 273.15))
         )
 
-    beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x))*(alpha/(alpha+x))*(x/(alpha+x))^(x/alpha)
-    beta = find_zero(beta_func, (0,0.1), Bisection())
+    beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x)) * (alpha / (alpha + x)) * (x / (alpha + x))^(x / alpha)
+    beta = find_zero(beta_func, (0, 0.1), Bisection())
 
     p_s = alpha * I_sat / log(1 + alpha / beta)
 
@@ -61,9 +61,9 @@ function equations!(y, params, t)
         f_temp = 0.08 * temp + 0.2
     elseif 10 <= temp <= 15
         f_temp = 1
-    elseif 15 < temp <=19
+    elseif 15 < temp <= 19
         f_temp = 19 / 4 - temp / 4
-    elseif t>19
+    elseif t > 19
         f_temp = 0
     else
         throw()
@@ -77,11 +77,11 @@ function equations!(y, params, t)
 
     da = (mu - nu) * a
     dn = j / K_A - mu * (n + N_struct)
-    dc = (p * (1 - e) - r)/K_A - mu * (c + C_struct)
+    dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
     
-    if c0 < C_min#This needs to be adjusted if the timetep is not 1
+    if c0 < C_min# This needs to be adjusted if the timetep is not 1
         da -= a * (C_min - c) / C_struct
-        dc = c-C_min
+        dc = c - C_min
     end 
 
     return (vcat(da, dn, dc))
@@ -97,8 +97,8 @@ function defaults(t_i, t_e, u)
     end
 
     t_arr = Interpolations.LinearInterpolation([t_i:t_e;], t_arr)
-    irr_arr = Interpolations.LinearInterpolation([t_i:t_e;], irr_arr)
-    ex_n_arr = Interpolations.LinearInterpolation([t_i:t_e;], ex_n_arr)
+    irr_arr = Interpolations.LinearInterpolation([t_i:t_e;], irr_arr .* 24 * 60 * 60 / (10^5))
+    ex_n_arr = Interpolations.LinearInterpolation([t_i:t_e;], ex_n_arr .* 10^3)
     u_arr = Interpolations.LinearInterpolation([t_i:t_e;], fill(u, Int(t_e - t_i + 1)))
 
     return(u_arr, t_arr, irr_arr, ex_n_arr)
@@ -106,7 +106,7 @@ end
 
 function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
     delts = []
-    #=for j = 1:365
+    for j = 1:365
         theta = 0.2163108 + 2 * atan(0.9671396 * tan(0.00860 * (j - 186))) # revolution angle from day of the year
         dec = asin(0.39795 * cos(theta)) # sun declination angle 
         p = 0.8333 # sunrise/sunset is when the top of the sun is apparently even with horizon
@@ -118,12 +118,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
                 (cos(lat * pi / 180) * cos(dec)),
             ),
         )
-    end=#
-    for d=1:365
-        j=mod(d-354,365)
-        dec=23.5*(pi/180)*sin((pi/180)*360*(j-91)/365)
-        push!(delts,(180/pi)*0.133*acos(-tan(lat*pi/180)*tan(dec)))
-    end#changing to how the book did it that they got it from makes no difference
+    end
     DeltaL = diff(delts)
     push!(DeltaL, DeltaL[364])
     NormDeltaL = DeltaL / findmax(DeltaL)[1]

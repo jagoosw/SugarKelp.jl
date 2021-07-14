@@ -14,15 +14,13 @@ The model is solved by using `Kelp.solvekelp` with inputs:
 
 `Kelp.defaults` generates default series for temperature, irradiance and nitrogen as used by the paper.
 
-## Current problems
-Now that some issues have been ironed out I can't quite get the results to match up with the results from the paper in Figure 3 using the data from Figure 2. The area looks good and the total carbon fixed and gross area are fairly close to their values (105g/136dm^2 vs 125g/131dm^2) but the plots of carbon/nitrogen are not right. Hopefully the problem is just the conversion from gN/g sw to gN/ g dw (in _Important Derived Quantities_ in the paper). 
-![Figure 3 equivilant.](img/paper_comparison.png)
+## Current state
 
-I have also noticed that the total carbon and area are very sensitive to the start day and the alignment of the data from the paper with the date (which is quite hard to tell because the plots are so small and the axis labels confusing).
+![Figure 3 equivilant.](img/paper_comparison.png)
 
 ## Example
 > :warning: This may be common knowledge but you have to run the example like `julia -i examples/default.jl` (not just `julia exa...`) otherwise the graphs immediately disappear.
-
+`example/paper.jl` gives the above plot attempting to replicate the result from the paper.
 `example/default.jl` runs the default values and the results will look something like this:
 ![A grid of graphs showing the variation of various parameters across the year, temperature behaves sinusoidally and the irradiance and nitrate concentration have spikes. The Frond area, nitrogen reserve and carbon reserve are also shown.](img/default.png)
 
@@ -36,9 +34,10 @@ I have also noticed that the total carbon and area are very sensitive to the sta
 - DataFrames
 - Plots
 - PyPlot
+- Measures
 Install them all with:
 
-`import Pkg; Pkg.add(["RecursiveArrayTools", "DiffEqBase", "OrdinaryDiffEq", "Roots", "Interpolations", "DataFrames", "Plots", "PyPlot"])`
+`import Pkg; Pkg.add(["RecursiveArrayTools", "DiffEqBase", "OrdinaryDiffEq", "Roots", "Interpolations", "DataFrames", "Plots", "PyPlot", "CSV"])`
 
 ## Some notes
 - The example takes a fairly long time to run but when I checked plotting was taking more than half the time, the time to get going is fairly long too but can apparently be fixed with [precompilaiton](https://julialang.org/blog/2021/01/precompile_tutorial/).
