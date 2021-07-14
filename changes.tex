@@ -1,0 +1,57 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage[titletoc,title]{appendix}
+
+\usepackage{amsmath,amsfonts,amssymb,mathtools}
+
+\usepackage{graphicx,float}
+\usepackage{pdfpages}
+
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+
+
+% arrows as stealth fighters
+\tikzset{>=stealth}
+
+
+\usepackage{esvect}
+
+\newcommand{\D}{\Delta}
+\newcommand{\nn}{\nonumber}
+
+\newcommand{\del}{\partial}
+\newcommand{\diff}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\con}[3]{\Gamma_{#1 #2}^#3}
+\newcommand{\Lagr}{\mathcal{L}}
+\usepackage{relsize}
+\newcommand{\Chris}[2]{\ensuremath{{\mathlarger{\mathlarger\Gamma}}^{#1}\!\!\!_{#2}}}
+\usepackage{physics}
+
+% Title content
+\title{Changes from Broch and Slagstad 2012}
+\date{\today}
+\author{Jago Strong-Wright}
+
+\begin{document}
+\maketitle
+\section*{Units}
+\begin{itemize}
+    \item The overall unit of time changed from hours to days so $R_1$,$R_2$,$P_1$,$P_2$ and $J_{max}$ are multiplied by $24$
+    \item Irradiance is changed from $\mu$mol photons m$^{-2}$s$^{-1}$ to mol photons m$^{-2}$days$^{-1}$.
+\end{itemize}
+This changes $\alpha$ by a factor of $\frac{10^6}{60\times60}$ and $I_{sat}$ by a factor of $\frac{24\times60\times60}{10^6}$.
+
+\section*{Parameters}
+\begin{itemize}
+    \item $T_{AP}$: The solution to the equation for $T_{AP}$ on the left column of page 766 is $T_AP=1737.7^o$K.
+    \item $T_{APL}$ and $T_{APH}$: Solving equation 13 for $P_{max}(T_{APL})$ and $P_{max}(T_{APH})$ gives $T_{APH}=1414.87^o$K and $T_{APL} = 4547.89^o$K.
+    \item Table 3 gives $P_2=1.44\times10^{-3}$gCdm$^{-2}$h$^{-1}$ but page 766 states $1.3\times10^{-3}$gCdm$^{-2}$h$^{-1}$. Using the table value there is no valid solutions for $T_{APL}$ and $T_{APH}$ so we have used the paper value.
+    \item Assuming these values of $T_{AP}$, $T_APH$ and $T_{APL}$ then the calculated value for $P$ in the right column of page 766 can be used to solve for $\alpha$ which is found to be $3.338\times10^{-5}$gCdm$^{-2}$h$^{-1}(\mu$ mol photons m$^{-2}$s$^{-1})^{-1}$.
+    \item Similarly to $T_{AP}$ the value for $T_{AR}$ given in the paper is not the solution to equation 14 but the value given in the table is.
+    \item Assuming that the values of $N_{min}$ and $N_{max}$ then min$(1-N_{min}/N)=1-N_{min}/N_{max}=0.5454$ (not $0.65$ as given in the bottom right of page 767). This changes the parameters $m_1$ and $m_2$ to $0.12925$ and $0.03575$. Alternatively, if the stated values of $m_1$ and $m_2$ are correct then $N_{max}=0.0286$.
+\end{itemize}
+\end{document} 

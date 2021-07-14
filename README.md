@@ -7,12 +7,14 @@ The model is solved by using `Kelp.solvekelp` with inputs:
 - `nd` the number of days to run for
 - `u` an interpolation function of the relative current speed in m/s with respect to the day number with the same start day as `t_i`
 - `temp` interpolation function of the temperature in deg C
-- `irr` interpolation function of the irradiance in micro mol photons / m^2 / s
+- `irr` interpolation function of the irradiance in mol photons / m^2 / day
 - `ex_n` interpolation function of the external nitrate concentration in micro mol / L
 - `lat` latitude in degrees
 - `a_0, n_0, c_0` the initial values of the area, nitrogen and carbon reserve fractions in dm^2, gN/g sw, gC/g sw
 
 `Kelp.defaults` generates default series for temperature, irradiance and nitrogen as used by the paper.
+
+Changes from the stated parameter values in the paper are detailed in `changes.pdf`.
 
 ## Current state
 

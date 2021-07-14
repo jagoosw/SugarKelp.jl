@@ -1,3 +1,8 @@
 new_resp_comparison.jl
 ScreenShots/*
 src/residual.jl
+*.gz
+*.fls
+*.aux
+*.fdb_latexmk
+*.log
