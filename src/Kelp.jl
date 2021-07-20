@@ -79,10 +79,10 @@ function equations!(y, params, t)
     dn = j / K_A - mu * (n + N_struct)
     dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
     
-    if (c0 < C_min)&(dc<0)# This needs to be adjusted if the timetep is not 1
-        da -= a * (C_min - c) / C_struct
-        dc = c - C_min
-    end 
+    if c0+dc < C_min# This needs to be adjusted if the timetep is not 1
+        da -= a * (C_min - c0) / C_struct
+        dc = C_min-c0
+    end
 
     return (vcat(da, dn, dc))
 end
