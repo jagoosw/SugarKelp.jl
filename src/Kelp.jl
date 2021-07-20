@@ -16,12 +16,13 @@ include("parameters.jl")
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 
 function equations!(y, params, t)
-    a, n, c = y[1], y[2], y[3]; c0 = copy(c)
+    a, n, c = y[1], y[2], y[3]; a0 = copy(a); c0 = copy(c)
 
-    if c < C_min
+    #= if c < C_min
         c = C_min
         a -= a * (C_min - c) / C_struct
-    end
+        @warn "here"
+    end =#
 
     u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL =
         params[1], params[2], params[3], params[4], params[5]
@@ -79,9 +80,9 @@ function equations!(y, params, t)
     dn = j / K_A - mu * (n + N_struct)
     dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
     
-    if c0+dc < C_min# This needs to be adjusted if the timetep is not 1
-        da -= a * (C_min - c0) / C_struct
-        dc = C_min-c0
+    if c0 + dc < C_min# This needs to be adjusted if the timetep is not 1
+        da -= a * (C_min - c0 - dc) / C_struct
+        dc = C_min - c0
     end
 
     return (vcat(da, dn, dc))
