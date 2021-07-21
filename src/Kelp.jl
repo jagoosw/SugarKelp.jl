@@ -1,5 +1,4 @@
 module Kelp
-
 using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, DataFrames
 include("parameters.jl")
 
@@ -14,32 +13,30 @@ include("parameters.jl")
 # a: Frond area of individual kelp (dm^2)
 # n: Nitrogen reserve relative to dry weight (gN/(g sw))
 # c: Carbon reserve relative to dry weight (gC/(g sw))
-
 function equations!(y, params, t)
-    a, n, c = y[1], y[2], y[3]; a0 = copy(a); c0 = copy(c)
-
-    #= if c < C_min
-        c = C_min
-        a -= a * (C_min - c) / C_struct
-        @warn "here"
-    end =#
+    a, n, c = y[1], y[2], y[3];
+    if c <= C_min 
+        a_check = a - a * (C_min - c) / C_struct
+    else
+        a_check = 0
+    end
 
     u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL =
-        params[1], params[2], params[3], params[4], params[5]
+            params[1], params[2], params[3], params[4], params[5]
 
     u = u_arr(t)# Relative current speed
     temp = temp_arr(t)# Temperature
     irr = irr_arr(t)# irradiance
     ex_n = ex_n_arr(t)# Ambient nitrate concentration, mmol/L
 
-    # Photosynthetic saturation equation
-    # maxinum photosynthetic rate
+        # Photosynthetic saturation equation
+        # maxinum photosynthetic rate
     p_max =
-        P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
-            1 +
-            exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
-            exp(T_APH / T_PH - T_APH / (temp + 273.15))
-        )
+            P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
+                1 +
+                exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
+                exp(T_APH / T_PH - T_APH / (temp + 273.15))
+            )
 
     beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x)) * (alpha / (alpha + x)) * (x / (alpha + x))^(x / alpha)
     beta = find_zero(beta_func, (0, 0.1), Bisection())
@@ -47,27 +44,27 @@ function equations!(y, params, t)
     p_s = alpha * I_sat / log(1 + alpha / beta)
 
 
-    # Evaluate functions
+        # Evaluate functions
     p = p_s * (1 - exp(-alpha * irr / p_s)) * exp(-beta * irr / p_s) # gross photosynthesis
     r = R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
     e = 1 - exp(gamma * (C_min - c)) # carbon exudation
 
     d = trunc(Int, mod(floor(t), 365) + 1) # Get the day number
     lambda = NormDeltaL[d] # This seems wrong to be interpolated because "change in day length" is discrete so going to stick choosing day numbers
-    # On the other hand the other parameters could be time series with higher resolution than once per day (but again is that valid with this model because they just one per day)
+        # On the other hand the other parameters could be time series with higher resolution than once per day (but again is that valid with this model because they just one per day)
 
     f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
 
     if -1.8 <= temp < 10 # effect of temperature on growth rate
         f_temp = 0.08 * temp + 0.2
     elseif 10 <= temp <= 15
-        f_temp = 1
-    elseif 15 < temp <= 19
-        f_temp = 19 / 4 - temp / 4
-    elseif t > 19
-        f_temp = 0
-    else
-        throw()
+            f_temp = 1
+        elseif 15 < temp <= 19
+            f_temp = 19 / 4 - temp / 4
+        elseif t > 19
+            f_temp = 0
+        else
+            throw()
     end
 
     f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
@@ -79,10 +76,10 @@ function equations!(y, params, t)
     da = (mu - nu) * a
     dn = j / K_A - mu * (n + N_struct)
     dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
-    
-    if c0 + dc < C_min# This needs to be adjusted if the timetep is not 1
-        da -= a * (C_min - c0 - dc) / C_struct
-        dc = C_min - c0
+        
+    if c + dc < C_min# This needs to be adjusted if the timetep is not 1
+        da -= (a * (C_min - c) / C_struct) * .5
+        dc = (C_min - c) * .5
     end
 
     return (vcat(da, dn, dc))
@@ -129,7 +126,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
     y_0 = vcat(a_0, n_0, c_0)
 
     solver = ODEProblem(equations!, y_0, (t_i, t_i + nd), params)
-    solution = solve(solver, Vern8(), dt=1, adaptive=false) # Not sure this is the best algorithm but ran fastest of the ones I checked
+    solution = solve(solver, RK4(), dt=1, adaptive=false) # Not sure this is the best algorithm but ran fastest of the ones I checked
 
     results =
         DataFrame(area=[], nitrogen=[], carbon=[], time=[])
