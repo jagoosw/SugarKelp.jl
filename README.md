@@ -12,6 +12,9 @@ The model is solved by using `Kelp.solvekelp` with inputs:
 - `lat` latitude in degrees
 - `a_0, n_0, c_0` the initial values of the area, nitrogen and carbon reserve fractions in dm^2, gN/g sw, gC/g sw
 
+Optional parameters are:
+- `params` path to parameters file, this defaults to the 2012 values, also available are Broch and Slagstad 2013 in `src/parameters/2013.jl`. You could also make your own and put it anywhere (see originals for the format).
+- `resp_model` if this is `1` (default) then `R_1*exp(...)` is used (as from 2012 paper), other choice is `2` for the 2013 paper modification (`(R_A*(...)+R_B)*exp(...)`).
 `Kelp.defaults` generates default series for temperature, irradiance and nitrogen as used by the paper.
 
 Changes from the stated parameter values in the paper are detailed in `changes.pdf`.

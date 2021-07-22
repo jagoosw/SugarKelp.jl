@@ -13,7 +13,7 @@ u_arr, temp, irr, ex_n = Kelp.defaults(t_i, t_i + nd, u)
 a_0 = 30;n_0 = 0.009;c_0 = 0.3
 
 #solve
-solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp, irr, ex_n, lat, a_0, n_0, c_0)
+solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp, irr, ex_n, lat, a_0, n_0, c_0, "../src/parameters/origional.jl")
 
 #plots
 pyplot()

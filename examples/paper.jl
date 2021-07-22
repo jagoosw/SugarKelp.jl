@@ -1,7 +1,7 @@
-using Plots, Dates, Measures, Interpolations, RollingFunctions, NumericalIntegration, CSV, DataFrames
+using Plots, Dates, Measures, Interpolations, CSV, DataFrames, LaTeXStrings
 
 include("../src/Kelp.jl")
-include("../src/parameters.jl")
+include("../src/parameters/origional.jl")
 
 offset = 4*31+28+30*2.0
 # collected from fig2 of origional paper with https://www.graphreader.com/
@@ -25,16 +25,20 @@ irr_arr = Interpolations.LinearInterpolation(irr_t, irr, extrapolation_bc=Flat()
 
 a_0 = 30;n_0 = 0.01;c_0 = 0.6
 
-solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp_arr, irr_arr, no3_arr, lat, a_0, n_0, c_0)
+solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp_arr, irr_arr, no3_arr, lat, a_0, n_0, c_0, "../src/parameters/origional.jl")
 
 pyplot()
-plot(layout=grid(2, 3))
+l = @layout [[a{0.25h};b{0.25h};c{0.5h}] grid(2,1)]
+plot(layout=l)
 
-plot!(temp_t,temp,sp=1,ylabel="Temperature/degC",legend=true)
-plot!(irr_t,irr,sp=2,ylabel="Irradiance/micro mol photons / m^2 / s",legend=true)
-plot!(no3_t,no3,sp=3,ylabel="Nitrate/micro mol / L",legend=true)
+plot!(temp_t,temp,sp=1,ylabel=L"Temperature/$^o$C",xlabel="Month",legend=false,label="Temperature")
+plt=twinx()
+plot!([no3_t[1],no3_t[1]],[no3[1]no3[1]],sp=6,label="Temperature")
+plot!(no3_t,no3,sp=6,ylabel=L"Nitrate/$\mu$ mol / L",legend=:right,label="Nitrate")
 
-# sjotun 1993
+plot!(irr_t,irr,sp=2,ylabel=L"Irradiance/mol photons/m$^2$/day",legend=false,xlabel="Month")
+
+#paper data
 c_t = [10.016,100.156,130.973,164.872,192.607,224.965,266.568,291.222,343.611,409.097] .+ offset 
 c = [0.312,0.349,0.292,0.195,0.224,0.266,0.281,0.307,0.363,0.373]
 n_t = [10.255,96.239,135.681,160.924,195.633,222.454,269.785,288.717,345.514,406.255] .+ offset 
@@ -48,16 +52,16 @@ n_factor = (results.nitrogen .- N_min) .* K_N
 c_factor = (results.carbon .- C_min) .* K_C
 w_factor = 1 .+ n_factor .+ c_factor .+ C_min .+ N_min
 
-plot!(results.time,results.area,sp=4,xlabel="Month", ylabel="Frond Area/dm^2",ylim=(29, 46),label="Model")
-plot!(area_t,area,label="Broch and Slagstad, 2012 (model)",sp=4)
+plot!(results.time,results.area,sp=3,xlabel="Month", ylabel=L"Frond Area/dm$^2$",ylim=(29, 46),label="Model",legend=false)
+plot!(area_t,area,label="B&S, 2012",sp=3)
 
-plot!(results.time,(results.nitrogen .+ N_struct) ./ w_factor,sp=5, xlabel="Month", ylabel="Nitrogen reserve/gN/g dw",label="Model")
-plot!(n_t,n,sp=5,seriestype=:scatter, label="Sjotun, 1993")
-plot!(n2_t,n2,label="Broch and Slagstad, 2012 (model)",sp=5)
+plot!(results.time,(results.nitrogen .+ N_struct) ./ w_factor,sp=4, xlabel="Month", ylabel="Nitrogen reserve/gN/g dw",label="Model")
+plot!(n2_t,n2,label="B&S, 2012",sp=4)
+plot!(n_t,n,sp=4,seriestype=:scatter, label="Sjotun, 1993",color="#ebcb8b")
 
-plot!(results.time,(results.carbon .+ C_struct) ./ w_factor,sp=6, xlabel="Month", ylabel="Carbon reserve/gC/g dw",label="Model")
-plot!(c_t,c,sp=6,seriestype=:scatter, label="Sjotun, 1993",legend=:bottomleft)
-plot!(c2_t,c2,label="Broch and Slagstad, 2012 (model)",sp=6)
+plot!(results.time,(results.carbon .+ C_struct) ./ w_factor,sp=5, xlabel="Month", ylabel="Carbon reserve/gC/g dw",label="Model",legend=false)
+plot!(c2_t,c2,label="B&S, 2012",sp=5)
+plot!(c_t,c,sp=5,seriestype=:scatter, label="Sjotun, 1993",color="#ebcb8b")
 
 t_ticks = []
 val_ticks = []
@@ -69,6 +73,5 @@ for day in t_i:t_i + nd
     end
 end
 
-plot!(xticks=(t_ticks, val_ticks),margin=-3mm)
-plot!(top_margin=0mm,legend=false)
+plot!(xticks=(t_ticks, val_ticks))
 display(display(plot!()))

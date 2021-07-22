@@ -1,7 +1,5 @@
 module Kelp
 using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, DataFrames
-include("parameters.jl")
-
 # Input parameters
 # t: time (days)
 # irr: irradiance (micro mol photons / m^2 / s)
@@ -14,75 +12,78 @@ include("parameters.jl")
 # n: Nitrogen reserve relative to dry weight (gN/(g sw))
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 function equations!(y, params, t)
-    a, n, c = y[1], y[2], y[3];
-    if c <= C_min 
-        a_check = a - a * (C_min - c) / C_struct
-    else
-        a_check = 0
-    end
+    a, n, c, c_fixed, a_gross, p_gross = y
 
-    u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL =
-            params[1], params[2], params[3], params[4], params[5]
-
-    u = u_arr(t)# Relative current speed
-    temp = temp_arr(t)# Temperature
-    irr = irr_arr(t)# irradiance
-    ex_n = ex_n_arr(t)# Ambient nitrate concentration, mmol/L
-
-        # Photosynthetic saturation equation
-        # maxinum photosynthetic rate
-    p_max =
-            P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
-                1 +
-                exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
-                exp(T_APH / T_PH - T_APH / (temp + 273.15))
-            )
-
-    beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x)) * (alpha / (alpha + x)) * (x / (alpha + x))^(x / alpha)
-    beta = find_zero(beta_func, (0, 0.1), Bisection())
-
-    p_s = alpha * I_sat / log(1 + alpha / beta)
-
-
-        # Evaluate functions
-    p = p_s * (1 - exp(-alpha * irr / p_s)) * exp(-beta * irr / p_s) # gross photosynthesis
-    r = R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
-    e = 1 - exp(gamma * (C_min - c)) # carbon exudation
-
-    d = trunc(Int, mod(floor(t), 365) + 1) # Get the day number
-    lambda = NormDeltaL[d] # This seems wrong to be interpolated because "change in day length" is discrete so going to stick choosing day numbers
-        # On the other hand the other parameters could be time series with higher resolution than once per day (but again is that valid with this model because they just one per day)
-
-    f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
-
-    if -1.8 <= temp < 10 # effect of temperature on growth rate
-        f_temp = 0.08 * temp + 0.2
-    elseif 10 <= temp <= 15
-            f_temp = 1
-        elseif 15 < temp <= 19
-            f_temp = 19 / 4 - temp / 4
-        elseif t > 19
-            f_temp = 0
+    if a > 0
+        if c <= C_min 
+            a_check = a - a * (C_min - c) / C_struct
         else
-            throw()
-    end
+            a_check = 0
+        end
 
-    f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
+        u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL, resp_model = params
 
-    mu = f_area * f_temp * f_photo * min(1 - N_min / n, 1 - C_min / c) # gross area specific growth rate
-    nu = 1e-6 * exp(epsilon * a) / (1 + 1e-6 * (exp(epsilon * a) - 1)) # front erosion
-    j = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65)) # nitrate uptake rate
+        u = u_arr(t)
+        temp = temp_arr(t)
+        irr = irr_arr(t)
+        ex_n = ex_n_arr(t)
 
-    da = (mu - nu) * a
-    dn = j / K_A - mu * (n + N_struct)
-    dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
+        p_max =
+                P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
+                    1 +
+                    exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
+                    exp(T_APH / T_PH - T_APH / (temp + 273.15))
+                )
+
+        beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x)) * (alpha / (alpha + x)) * (x / (alpha + x))^(x / alpha)
+        beta = find_zero(beta_func, (0, 0.1), Bisection())
+
+        p_s = alpha * I_sat / log(1 + alpha / beta)
+        p = p_s * (1 - exp(-alpha * irr / p_s)) * exp(-beta * irr / p_s) # gross photosynthesis
+        e = 1 - exp(gamma * (C_min - c)) # carbon exudation
+
+        d = trunc(Int, mod(floor(t), 365) + 1) 
+        lambda = NormDeltaL[d] 
         
-    if c + dc < C_min# This needs to be adjusted if the timetep is not 1
-        da -= (a * (C_min - c) / C_struct) * .5
-        dc = (C_min - c) * .5
-    end
+        f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
 
-    return (vcat(da, dn, dc))
+        if -1.8 <= temp < 10 # effect of temperature on growth rate
+            f_temp = 0.08 * temp + 0.2
+        elseif 10 <= temp <= 15
+                f_temp = 1
+            elseif 15 < temp <= 19
+                f_temp = 19 / 4 - temp / 4
+            elseif t > 19
+                f_temp = 0
+            else
+                throw()
+        end
+
+        f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
+
+        mu = f_area * f_temp * f_photo * min(1 - N_min / n, 1 - C_min / c) # gross area specific growth rate
+        nu = 1e-6 * exp(epsilon * a) / (1 + 1e-6 * (exp(epsilon * a) - 1)) # front erosion
+        j = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65)) # nitrate uptake rate
+
+        if resp_model == 1
+            r = R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
+        elseif resp_model == 2
+            r = (R_A * (mu / mu_max + j / J_max) + R_B) * exp(T_AR / T_R1 - T_AR / (temp + 273.15))
+        end
+
+        da = (mu - nu) * a
+        dn = j / K_A - mu * (n + N_struct)
+        dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
+            
+        if c + dc < C_min# This needs to be adjusted if the timetep is not 1
+            da -= (a * (C_min - c) / C_struct) * .5
+            dc = (C_min - c) * .5
+        end
+    else
+        da, dn, dc = 0, 0, 0
+        @warn "Area reached 0"
+    end
+    return (vcat(da, dn, dc, dc * K_A * a, mu * a, p * a))
 end
 
 function defaults(t_i, t_e, u)
@@ -102,7 +103,8 @@ function defaults(t_i, t_e, u)
     return(u_arr, t_arr, irr_arr, ex_n_arr)
 end
 
-function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
+function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1)
+    include(params)
     delts = []
     for j = 1:365
         theta = 0.2163108 + 2 * atan(0.9671396 * tan(0.00860 * (j - 186))) # revolution angle from day of the year
@@ -121,15 +123,15 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0)
     push!(DeltaL, DeltaL[364])
     NormDeltaL = DeltaL / findmax(DeltaL)[1]
 
-    params = (u, temp, irr, ex_n, NormDeltaL)
+    params = (u, temp, irr, ex_n, NormDeltaL, resp_model)
 
-    y_0 = vcat(a_0, n_0, c_0)
+    y_0 = vcat(a_0, n_0, c_0, 0, 0, 0)
 
     solver = ODEProblem(equations!, y_0, (t_i, t_i + nd), params)
-    solution = solve(solver, RK4(), dt=1, adaptive=false) # Not sure this is the best algorithm but ran fastest of the ones I checked
+    solution = solve(solver, RK4(), dt=1, adaptive=false)
 
     results =
-        DataFrame(area=[], nitrogen=[], carbon=[], time=[])
+        DataFrame(area=[], nitrogen=[], carbon=[], carbon_fixed=[], area_gross=[], photo_gross=[], time=[])
     for (ind, val) in enumerate(solution.u)
         push!(val, solution.t[ind])
         push!(results, (val))
