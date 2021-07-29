@@ -12,7 +12,7 @@ using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, Da
 # n: Nitrogen reserve relative to dry weight (gN/(g sw))
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 function equations!(y, params, t)
-    a, n, c, c_fixed, a_gross, p_gross = y
+    a, n, c = y
 
     if a > 0
         if c <= C_min 
@@ -21,7 +21,7 @@ function equations!(y, params, t)
             a_check = 0
         end
 
-        u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL, resp_model = params
+        u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL, resp_model, dt = params
 
         u = u_arr(t)
         temp = temp_arr(t)
@@ -50,13 +50,13 @@ function equations!(y, params, t)
         if -1.8 <= temp < 10 # effect of temperature on growth rate
             f_temp = 0.08 * temp + 0.2
         elseif 10 <= temp <= 15
-                f_temp = 1
-            elseif 15 < temp <= 19
-                f_temp = 19 / 4 - temp / 4
-            elseif t > 19
-                f_temp = 0
-            else
-                throw()
+            f_temp = 1
+        elseif 15 < temp <= 19
+            f_temp = 19 / 4 - temp / 4
+        elseif temp > 19
+            f_temp = 0
+        else
+            throw("Out of range temperature, $temp")
         end
 
         f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
@@ -75,15 +75,15 @@ function equations!(y, params, t)
         dn = j / K_A - mu * (n + N_struct)
         dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
             
-        if c + dc < C_min# This needs to be adjusted if the timetep is not 1
-            da -= (a * (C_min - c) / C_struct) * .5
-            dc = (C_min - c) * .5
+        if c + dc < C_min
+            da -= (a * (C_min - c) / C_struct) * .5 * dt
+            dc = (C_min - c) * .5 * dt
         end
     else
-        da, dn, dc = 0, 0, 0
+        da, dn, dc, j = 0, 0, 0,0 
         @warn "Area reached 0"
     end
-    return (vcat(da, dn, dc, dc * K_A * a, mu * a, p * a))
+    return (vcat(da, dn, dc, j*a))
 end
 
 function defaults(t_i, t_e, u)
@@ -103,7 +103,7 @@ function defaults(t_i, t_e, u)
     return(u_arr, t_arr, irr_arr, ex_n_arr)
 end
 
-function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1)
+function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1)
     include(params)
     delts = []
     for j = 1:365
@@ -123,15 +123,15 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/
     push!(DeltaL, DeltaL[364])
     NormDeltaL = DeltaL / findmax(DeltaL)[1]
 
-    params = (u, temp, irr, ex_n, NormDeltaL, resp_model)
+    params = (u, temp, irr, ex_n, NormDeltaL, resp_model, dt)
 
-    y_0 = vcat(a_0, n_0, c_0, 0, 0, 0)
+    y_0 = vcat(a_0, n_0, c_0, 0)
 
     solver = ODEProblem(equations!, y_0, (t_i, t_i + nd), params)
-    solution = solve(solver, RK4(), dt=1, adaptive=false)
+    solution = solve(solver, RK4(), dt=dt, adaptive=false)#Please keep the RK4 algorithm otherwise the extreme caron limit needs to be changed
 
     results =
-        DataFrame(area=[], nitrogen=[], carbon=[], carbon_fixed=[], area_gross=[], photo_gross=[], time=[])
+        DataFrame(area=[], nitrogen=[], carbon=[], gross_nitrate=[], time=[])
     for (ind, val) in enumerate(solution.u)
         push!(val, solution.t[ind])
         push!(results, (val))
