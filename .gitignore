@@ -6,3 +6,5 @@ src/residual.jl
 *.aux
 *.fdb_latexmk
 *.log
+presentations/*
+*.nc
