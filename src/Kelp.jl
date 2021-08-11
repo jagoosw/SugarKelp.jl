@@ -268,10 +268,10 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
 
                 solution, results = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt);
                 
-                all_results[1,i,j,k,:] = results.area;
-                all_results[2,i,j,k,:] = results.nitrogen;
-                all_results[3,i,j,k,:] = results.carbon;
-                all_results[4,i,j,k,:] = results.gross_nitrate
+                all_results[1,i,j,k,1:length(results.area)] = results.area;
+                all_results[2,i,j,k,1:length(results.nitrogen)] = results.nitrogen;
+                all_results[3,i,j,k,1:length(results.carbon)] = results.carbon;
+                all_results[4,i,j,k,1:length(results.gross_nitrate)] = results.gross_nitrate
             end
         end
     end
