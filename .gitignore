@@ -8,3 +8,4 @@ src/residual.jl
 *.log
 presentations/*
 *.nc
+doc/build/*

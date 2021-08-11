@@ -1,15 +1,6 @@
 # Kelp.jl
 [Kelp.jl](https://github.com/jagoosw/Kelp.jl) is an implementation of the sugar kelp growth model from [Broch and Slagstad model of the growth and composition of _Saccharina latissima_  Kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
-# Contents
-
-```@contents
-Pages = [
-    "functions.md",
-]
-Depth = 1
-```
-
 
 # Getting Started
 ## Current dependencies

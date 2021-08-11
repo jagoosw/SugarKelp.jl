@@ -13,6 +13,7 @@ Documenter.makedocs(
     expandfirst = [],
     pages = [
         "Index" => "index.md",
+        "Function Documentation" => "functions.md"
     ],
     format = Documenter.HTML(prettyurls = false)
 )

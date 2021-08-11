@@ -33,7 +33,7 @@ This is because the "extreme carbon limit" element is only implientable with kno
 must be changed to a particular value rather than changing the deriviative. This can only be done (within the framework of
 the ODE library) by setting the derivitive to (X(next)-X(old))/dt
 """
-function equations!(y, params, t)
+function equations!(y::Vector{Float64}, params, t::Float64)
     a, n, c = y
 
     if a > 0
@@ -45,10 +45,10 @@ function equations!(y, params, t)
 
         u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL, resp_model, dt = params
 
-        u = u_arr(t)
-        temp = temp_arr(t)
-        irr = irr_arr(t)
-        ex_n = ex_n_arr(t)
+        u = u_arr(t)::Float64
+        temp = temp_arr(t)::Float64
+        irr = irr_arr(t)::Float64
+        ex_n = ex_n_arr(t)::Float64
 
         p_max =
                 P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
