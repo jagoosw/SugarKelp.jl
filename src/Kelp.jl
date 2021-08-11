@@ -103,10 +103,10 @@ function equations!(y::Vector{Float64}, params, t::Float64)
             dc = (C_min - c) * .5 * dt
         end
     else
-        da, dn, dc, j = 0, 0, 0,0 
+        da, dn, dc, j = 0, 0, 0, 0 
         @warn "Area reached 0"
     end
-    return (vcat(da, dn, dc, j*a))
+    return (vcat(da, dn, dc, j * a))
 end
 
 """
@@ -182,7 +182,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/
     y_0 = vcat(a_0, n_0, c_0, 0)
 
     solver = ODEProblem(equations!, y_0, (t_i, t_i + nd), params)
-    solution = solve(solver, RK4(), dt=dt, adaptive=false)#Please keep the RK4 algorithm otherwise the extreme caron limit needs to be changed
+    solution = solve(solver, RK4(), dt=dt, adaptive=false)# Please keep the RK4 algorithm otherwise the extreme caron limit needs to be changed
 
     results =
         DataFrame(area=[], nitrogen=[], carbon=[], gross_nitrate=[], time=[])
@@ -193,8 +193,110 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/
 
     return(solution, results)
 end
-end # module
 
+"""
+    Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, params="src/parameters/origional.jl", resp_model=1, dt=1)
+Solve the model for a (spacially) fixed grid of inputs.
+
+Parameters:
+- `t_i`: start day (w.r.t. t=0 in time)
+- `nd`: number of days to run for
+- `a_0`: initial area/dm^2
+- `n_0`: initial nitrogen reserve/gN/gSW
+- `c_0`: initial carbon reserve/gC/gSW
+- `arr_lon`: longitudes for no3 and temp
+- `arr_lat`: latitudes for no3 and temp
+- `arr_dep`: depths for no3 and temp
+- `arr_time`: time for no3 and temp
+- `no3`: array of no3 concentration in lon,lat,depth,time
+- `temp`: array of temp concentration in lon,lat,depth,time
+- `u`: array of water speed in lon,lat,depth,time
+- `par_data`: array of:
+    - `par values in lon,lat,time
+    - `corresponding time
+    - `par fill value
+- `kd_data`: array of:
+    - kd values in lon,lat,time
+    - corresponding time
+    - kd fill value
+- `params`: string of the path to a parameters file, defaults to the 2012 values. Also supplied is 2013 in src/parameters/2013.jl or you can copy and vary them
+- `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
+- `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
+
+Returns: results as an array of (area/nitrogen/carbon/nitrate update, lon, lat, depth, time)
+
+Notes:
+par and kd need their own time coordinates and fill value because they come from satelite observation which are 
+temporally sparse so need to be checked and interpolated in time for each point. On the other hand temp and no3
+(that I'm using) are from Copurnicus' models so if a point has a value at some time it will at all times.
+
+no3,temp and u need to be of the same shape and size and with the values corresponding to the same position/time.
+"""
+function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1)
+    # Would like to annotate type for the others but for some reason they making tuples of "Number" doesn't isn't satisfied
+    par, par_t, par_fill = par_data;kd, kd_t, kd_fill = kd_data
+
+    all_results::Array{Float64,5} = repeat([NaN], 4, length(arr_lon), length(arr_lat), length(arr_dep), floor(Int, nd) + 1);
+    points::Array{Vector{Int64},3} = collect.(Iterators.product([1:length(arr_lon);], [1:length(arr_lat);], [1:length(arr_dep);]));
+
+    Threads.@threads for (i, j, k) in points
+        lat = arr_lat[j];depth = arr_dep[k]
+
+        no3_vals = no3[i,j,k,:]
+        temp_vals = temp[i,j,k,:]
+        u_vals = u[i,j,k,:]
+        if (!isnan(no3_vals[1])) & (!isnan(temp_vals[1])) & (!isnan(u_vals[1])) & all(n > 0 for n in no3_vals)
+            no3_itp = Interpolations.LinearInterpolation(arr_time, no3_vals)
+            temp_itp = Interpolations.LinearInterpolation(arr_time, temp_vals)
+            u_itp = Interpolations.LinearInterpolation(arr_time, u_vals)
+            
+            par_vals_raw = par[i,j,:]
+            kd_vals_raw = kd[i,j,:]
+
+            par_vals, par_t_vals = extract_valid(par_vals_raw, par_t, par_fill)
+            kd_vals, kd_t_vals = extract_valid(kd_vals_raw, kd_t, kd_fill)
+
+            if (length(par_vals) > 6) & (length(kd_vals) > 6)
+                par_itp = Interpolations.LinearInterpolation(par_t_vals, par_vals, extrapolation_bc=Flat())
+                kd_itp = Interpolations.LinearInterpolation(kd_t_vals, kd_vals, extrapolation_bc=Flat())
+                irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* exp.(-kd_itp.(arr_time) .* depth), extrapolation_bc=Flat())
+
+                solution, results = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt);
+                
+                all_results[1,i,j,k,:] = results.area;
+                all_results[2,i,j,k,:] = results.nitrogen;
+                all_results[3,i,j,k,:] = results.carbon;
+                all_results[4,i,j,k,:] = results.gross_nitrate
+            end
+        end
+    end
+    return all_results
+end
+
+"""
+    Kelp.extract_valid(raw,raw_time,fill)
+Extracts the valid values from an array by checking against a fill value and returns the valids and corresponding time.
+
+Parameters:
+- `raw`: the array to check
+- `raw_time`: the corresponding time array
+- `fill`: the fill value to check against
+
+Returns:
+- `vals`: the filtered values
+- `time`: corresponding times
+"""
+function extract_valid(raw, raw_time, fill)
+    vals, times = [], []
+    for (ind, val) in enumerate(raw)
+        if val != fill
+            push!(vals, val)
+            push!(times, raw_time[ind])
+        end
+    end
+    return (vals, times)
+end
+end # module
 """
     get_int(val, list, tol)
 Function that finds the index in the list with the closest value to val. Error is thrown if no result is within tollerance, tol.
@@ -233,29 +335,29 @@ Returns: new array with interpolated 3rd dimension
 """
 function interp_deps(arr, origional_depths, desired_depths, invalid_val)
     arr_size = size(arr)
-    new_arr = repeat([NaN],arr_size[1], arr_size[2], length(desired_depths), arr_size[4]);
+    new_arr = repeat([NaN], arr_size[1], arr_size[2], length(desired_depths), arr_size[4]);
 
     points = collect.(Iterators.product([1:arr_size[1];], [1:arr_size[2];], [1:arr_size[4];]));
     Threads.@threads for (i, j, k) in points
         dep_arr = arr[i,j,:,k]
-        usable=[];
-        finished=false
-        for (ind,val) in enumerate(dep_arr)
-            if (finished==false)&(!isnan(val))&(round(val)!=round(invalid_val))
-                push!(usable,val)
+        usable = [];
+        finished = false
+        for (ind, val) in enumerate(dep_arr)
+            if (finished == false) & (!isnan(val)) & (round(val) != round(invalid_val))
+                push!(usable, val)
             else
-                finished=true
+                finished = true
             end
         end
-        if length(usable)>1
-            deps=origional_depths[1:length(usable)]
+        if length(usable) > 1
+            deps = origional_depths[1:length(usable)]
             dep_itp = Interpolations.LinearInterpolation(deps, usable, extrapolation_bc=Flat())
 
-            extent=findmin(abs.(desired_depths.-deps[end]))[2]
-            if extent!=length(desired_depths)
-                search_deps=desired_depths[1:extent-1]
+            extent = findmin(abs.(desired_depths .- deps[end]))[2]
+            if extent != length(desired_depths)
+                search_deps = desired_depths[1:extent - 1]
             else
-                search_deps=desired_depths
+                search_deps = desired_depths
             end
             new_arr[i,j,1:length(search_deps),k] = dep_itp.(search_deps)
         end
