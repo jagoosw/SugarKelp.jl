@@ -222,6 +222,7 @@ Parameters:
 - `params`: string of the path to a parameters file, defaults to the 2012 values. Also supplied is 2013 in src/parameters/2013.jl or you can copy and vary them
 - `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
 - `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
+- `progress`: option to update progress at each level (when multithreading not accurate but useful), defaults to true
 
 Returns: results as an array of (area/nitrogen/carbon/nitrate update, lon, lat, depth, time)
 
@@ -232,7 +233,7 @@ temporally sparse so need to be checked and interpolated in time for each point.
 
 no3,temp and u need to be of the same shape and size and with the values corresponding to the same position/time.
 """
-function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1)
+function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1, progress=true)
     # Would like to annotate type for the others but for some reason they making tuples of "Number" doesn't isn't satisfied
     par, par_t, par_fill = par_data;kd, kd_t, kd_fill = kd_data
 
@@ -240,6 +241,10 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
     points::Array{Vector{Int64},3} = collect.(Iterators.product([1:length(arr_lon);], [1:length(arr_lat);], [1:length(arr_dep);]));
 
     Threads.@threads for (i, j, k) in points
+        if (progress==true)&(i==1)&(j==1)
+            @info("At level $k")
+        end
+
         lat = arr_lat[j];depth = arr_dep[k]
 
         no3_vals = no3[i,j,k,:]
