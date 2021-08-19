@@ -219,6 +219,7 @@ Parameters:
     - kd values in lon,lat,time
     - corresponding time
     - kd fill value
+- `beta`: array of light attenuation coefficients (PAR(z)=PAR(z=0)*beta) in lon,lat,depth,time. Defaults to nothing and kd is used instead
 - `params`: string of the path to a parameters file, defaults to the 2012 values. Also supplied is 2013 in src/parameters/2013.jl or you can copy and vary them
 - `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
 - `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
@@ -233,7 +234,7 @@ temporally sparse so need to be checked and interpolated in time for each point.
 
 no3,temp and u need to be of the same shape and size and with the values corresponding to the same position/time.
 """
-function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1, progress=true)
+function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, beta=nothing, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1, progress::Bool=true)
     # Would like to annotate type for the others but for some reason they making tuples of "Number" doesn't isn't satisfied
     par, par_t, par_fill = par_data;kd, kd_t, kd_fill = kd_data
 
@@ -256,16 +257,23 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
             u_itp = Interpolations.LinearInterpolation(arr_time, u_vals)
             
             par_vals_raw = par[i,j,:]
-            kd_vals_raw = kd[i,j,:]
-
             par_vals, par_t_vals = extract_valid(par_vals_raw, par_t, par_fill)
-            kd_vals, kd_t_vals = extract_valid(kd_vals_raw, kd_t, kd_fill)
+            
+            if beta==nothing
+                kd_vals_raw = kd[i,j,:]
+                kd_vals, kd_t_vals = extract_valid(kd_vals_raw, kd_t, kd_fill)
+            else
+                beta_vals=beta[i,j,k,:]
+            end
 
-            if (length(par_vals) > 6) & (length(kd_vals) > 6)
+            if (length(par_vals) > 6)# & (beta!=nothing) | (length(kd_vals) > 6)
                 par_itp = Interpolations.LinearInterpolation(par_t_vals, par_vals, extrapolation_bc=Flat())
-                kd_itp = Interpolations.LinearInterpolation(kd_t_vals, kd_vals, extrapolation_bc=Flat())
-                irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* exp.(-kd_itp.(arr_time) .* depth), extrapolation_bc=Flat())
-
+                if beta==nothing
+                    kd_itp = Interpolations.LinearInterpolation(kd_t_vals, kd_vals, extrapolation_bc=Flat())
+                    irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* exp.(-kd_itp.(arr_time) .* depth), extrapolation_bc=Flat())
+                else
+                    irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* beta_vals, extrapolation_bc=Flat())
+                end
                 solution, results = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt);
                 
                 all_results[1,i,j,k,1:length(results.area)] = results.area;
@@ -294,7 +302,7 @@ Returns:
 function extract_valid(raw, raw_time, fill)
     vals, times = [], []
     for (ind, val) in enumerate(raw)
-        if val != fill
+        if (val != fill)&(!isnan(val))
             push!(vals, val)
             push!(times, raw_time[ind])
         end
