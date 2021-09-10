@@ -12,8 +12,70 @@ using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, Da
 # n: Nitrogen reserve relative to dry weight (gN/(g sw))
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 
+
+""""
+    Kelp.equations(t, a, n, c, u, temp, irr, ex_n, lambda, resp_model, dt)
+
+Solves the main equations given scalar values.
+
+Docstring update comming soon.
 """
-    Kelp.equations!(y, params, t)
+function equations(t, a, n, c, u, temp, irr, ex_n, lambda, resp_model, dt)
+    p_max =
+                P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
+                    1 +
+                    exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
+                    exp(T_APH / T_PH - T_APH / (temp + 273.15))
+                )
+
+    beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x)) * (alpha / (alpha + x)) * (x / (alpha + x))^(x / alpha)
+    beta = find_zero(beta_func, (0, 0.1), Bisection())
+
+    p_s = alpha * I_sat / log(1 + alpha / beta)
+    p = p_s * (1 - exp(-alpha * irr / p_s)) * exp(-beta * irr / p_s) # gross photosynthesis
+    e = 1 - exp(gamma * (C_min - c)) # carbon exudation
+        
+    f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
+
+    if -1.8 <= temp < 10 # effect of temperature on growth rate
+        f_temp = 0.08 * temp + 0.2
+    elseif 10 <= temp <= 15
+        f_temp = 1
+    elseif 15 < temp <= 19
+        f_temp = 19 / 4 - temp / 4
+    elseif temp > 19
+        f_temp = 0
+    else
+        @warn "Out of range temperature, $temp"
+        f_temp = 0
+    end
+
+    f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
+
+    mu = f_area * f_temp * f_photo * min(1 - N_min / n, 1 - C_min / c) # gross area specific growth rate
+    nu = 1e-6 * exp(epsilon * a) / (1 + 1e-6 * (exp(epsilon * a) - 1)) # front erosion
+    j = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65)) # nitrate uptake rate
+
+    if resp_model == 1
+        r = R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
+    elseif resp_model == 2
+        r = (R_A * (mu / mu_max + j / J_max) + R_B) * exp(T_AR / T_R1 - T_AR / (temp + 273.15))
+    end
+
+    da = (mu - nu) * a
+    dn = j / K_A - mu * (n + N_struct)
+    dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
+            
+    if c + dc < C_min
+        da -= (a * (C_min - c) / C_struct) * .5 * dt
+        dc = (C_min - c) * .5 * dt
+    end
+
+    return da, dn, dc, j
+end
+
+"""
+    Kelp.solver!(y, params, t)
 
 Equations outlined in the __Main Equations__ section of the paper to be solved by the ODE library.
 - `y`: the current state of the system as a vector (area, nitrate reserve, carbon reserve).
@@ -33,16 +95,10 @@ This is because the "extreme carbon limit" element is only implientable with kno
 must be changed to a particular value rather than changing the deriviative. This can only be done (within the framework of
 the ODE library) by setting the derivitive to (X(next)-X(old))/dt
 """
-function equations!(y::Vector{Float64}, params, t::Float64)
+function solver!(y::Vector{Float64}, params, t::Float64)
     a, n, c = y
 
     if a > 0
-        if c <= C_min 
-            a_check = a - a * (C_min - c) / C_struct
-        else
-            a_check = 0
-        end
-
         u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL, resp_model, dt = params
 
         u = u_arr(t)::Float64
@@ -50,58 +106,11 @@ function equations!(y::Vector{Float64}, params, t::Float64)
         irr = irr_arr(t)::Float64
         ex_n = ex_n_arr(t)::Float64
 
-        p_max =
-                P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
-                    1 +
-                    exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
-                    exp(T_APH / T_PH - T_APH / (temp + 273.15))
-                )
-
-        beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x)) * (alpha / (alpha + x)) * (x / (alpha + x))^(x / alpha)
-        beta = find_zero(beta_func, (0, 0.1), Bisection())
-
-        p_s = alpha * I_sat / log(1 + alpha / beta)
-        p = p_s * (1 - exp(-alpha * irr / p_s)) * exp(-beta * irr / p_s) # gross photosynthesis
-        e = 1 - exp(gamma * (C_min - c)) # carbon exudation
-
         d = trunc(Int, mod(floor(t), 365) + 1) 
         lambda = NormDeltaL[d] 
-        
-        f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
 
-        if -1.8 <= temp < 10 # effect of temperature on growth rate
-            f_temp = 0.08 * temp + 0.2
-        elseif 10 <= temp <= 15
-            f_temp = 1
-        elseif 15 < temp <= 19
-            f_temp = 19 / 4 - temp / 4
-        elseif temp > 19
-            f_temp = 0
-        else
-            @warn "Out of range temperature, $temp"
-            f_temp = 0
-        end
+        da, dn, dc, j = equations(t, a, n, c, u, temp, irr, ex_n, lambda, resp_model, dt)
 
-        f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
-
-        mu = f_area * f_temp * f_photo * min(1 - N_min / n, 1 - C_min / c) # gross area specific growth rate
-        nu = 1e-6 * exp(epsilon * a) / (1 + 1e-6 * (exp(epsilon * a) - 1)) # front erosion
-        j = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65)) # nitrate uptake rate
-
-        if resp_model == 1
-            r = R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
-        elseif resp_model == 2
-            r = (R_A * (mu / mu_max + j / J_max) + R_B) * exp(T_AR / T_R1 - T_AR / (temp + 273.15))
-        end
-
-        da = (mu - nu) * a
-        dn = j / K_A - mu * (n + N_struct)
-        dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
-            
-        if c + dc < C_min
-            da -= (a * (C_min - c) / C_struct) * .5 * dt
-            dc = (C_min - c) * .5 * dt
-        end
     else
         da, dn, dc, j = 0, 0, 0, 0 
         @warn "Area reached 0"
@@ -110,33 +119,8 @@ function equations!(y::Vector{Float64}, params, t::Float64)
 end
 
 """
-    Kelp.defaults(t_i, t_e, u)
-Generates "default" or anayltical values for the water speed, temperature, irradiance and external nitrogen for testing.
+    Kelp.solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
 
-Parameters:
-- `t_i`: start time
-- `t_e`: end time
-- `u`: your chosen water speed
-"""
-function defaults(t_i, t_e, u)
-    t_arr, irr_arr, ex_n_arr = [], [], []
-    for t = t_i:t_e
-        d = trunc(Int, mod(floor(t), 365) + 1)
-        push!(t_arr, 6 * cos((d - 250) * 2 * pi / 365) + 8)
-        push!(irr_arr, 40 * (sin((d + 15) * pi / 365)^10) + 1)
-        push!(ex_n_arr, (7 * ((cos(d * 2 * pi / 365) + 1) / 2).^3 + 0.1) / 1000)
-    end
-
-    t_arr = Interpolations.LinearInterpolation([t_i:t_e;], t_arr)
-    irr_arr = Interpolations.LinearInterpolation([t_i:t_e;], irr_arr .* 24 * 60 * 60 / (10^5))
-    ex_n_arr = Interpolations.LinearInterpolation([t_i:t_e;], ex_n_arr .* 10^3)
-    u_arr = Interpolations.LinearInterpolation([t_i:t_e;], fill(u, Int(t_e - t_i + 1)))
-
-    return(u_arr, t_arr, irr_arr, ex_n_arr)
-end
-
-"""
-    Kelp.solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1)
 Solves the model for some set of parametetrs and returns the ODE library solution as well as a dataframe of the useful results.
 
 Parameters:
@@ -152,50 +136,36 @@ Parameters:
 - `params`: string of the path to a parameters file, defaults to the 2012 values. Also supplied is 2013 in src/parameters/2013.jl or you can copy and vary them
 - `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
 - `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
+- `dataframe`: output as a dataframe, default to true. Alternative is an array (faster)
 
 Returns:
 - `solution`: the ODE library solution
-- `results`: dataframe of area/nitrogen reserve/carbon reserve/total nitrate update. All others useful quantities can be easily derived.
+- `results`: dataframe or array of area/nitrogen reserve/carbon reserve/total nitrate update. All others useful quantities can be easily derived.
 """
-function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1)
+function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
     include(params)
-    delts = []
-    for j = 1:365
-        theta = 0.2163108 + 2 * atan(0.9671396 * tan(0.00860 * (j - 186))) # revolution angle from day of the year
-        dec = asin(0.39795 * cos(theta)) # sun declination angle 
-        p = 0.8333 # sunrise/sunset is when the top of the sun is apparently even with horizon
-        push!(
-            delts,
-            24 -
-            (24 / pi) * acos(
-                (sin(p * pi / 180) + sin(lat * pi / 180) * sin(dec)) /
-                (cos(lat * pi / 180) * cos(dec)),
-            ),
-        )
-    end
-    DeltaL = diff(delts)
-    push!(DeltaL, DeltaL[364])
-    NormDeltaL = DeltaL / findmax(DeltaL)[1]
-
+    NormDeltaL = normdeltal(lat)
     params = (u, temp, irr, ex_n, NormDeltaL, resp_model, dt)
 
     y_0 = vcat(a_0, n_0, c_0, 0)
 
-    solver = ODEProblem(equations!, y_0, (t_i, t_i + nd), params)
-    solution = solve(solver, RK4(), dt=dt, adaptive=false)# Please keep the RK4 algorithm otherwise the extreme caron limit needs to be changed
+    solver = ODEProblem(solver!, y_0, (t_i, t_i + nd), params)
+    solution = OrdinaryDiffEq.solve(solver, RK4(), dt=dt, adaptive=false)# Please keep the RK4 algorithm otherwise the extreme caron limit needs to be changed
 
-    results =
-        DataFrame(area=[], nitrogen=[], carbon=[], gross_nitrate=[], time=[])
-    for (ind, val) in enumerate(solution.u)
-        push!(val, solution.t[ind])
-        push!(results, (val))
+    if dataframe == true
+        results = DataFrame(area=[], nitrogen=[], carbon=[], gross_nitrate=[], time=[])
+        for (ind, val) in enumerate(solution.u)
+            push!(val, solution.t[ind])
+            push!(results, (val))
+        end
+        return(solution, results)
+    else
+        return vcat(transpose.(solution.u)...)
     end
-
-    return(solution, results)
 end
 
 """
-    Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, params="src/parameters/origional.jl", resp_model=1, dt=1)
+    Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, att = nothing, params="src/parameters/origional.jl", resp_model=1, dt=1)
 Solve the model for a (spacially) fixed grid of inputs.
 
 Parameters:
@@ -219,7 +189,7 @@ Parameters:
     - kd values in lon,lat,time
     - corresponding time
     - kd fill value
-- `beta`: array of light attenuation coefficients (PAR(z)=PAR(z=0)*beta) in lon,lat,depth,time. Defaults to nothing and kd is used instead
+- `att`: array of light attenuation coefficients (PAR(z)=PAR(z=0)*att) in lon,lat,depth,time. Defaults to nothing and kd is used instead
 - `params`: string of the path to a parameters file, defaults to the 2012 values. Also supplied is 2013 in src/parameters/2013.jl or you can copy and vary them
 - `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
 - `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
@@ -234,7 +204,7 @@ temporally sparse so need to be checked and interpolated in time for each point.
 
 no3,temp and u need to be of the same shape and size and with the values corresponding to the same position/time.
 """
-function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, beta=nothing, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1, progress::Bool=true)
+function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, att=nothing, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1, progress::Bool=true)
     # Would like to annotate type for the others but for some reason they making tuples of "Number" doesn't isn't satisfied
     par, par_t, par_fill = par_data;kd, kd_t, kd_fill = kd_data
 
@@ -242,7 +212,7 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
     points::Array{Vector{Int64},3} = collect.(Iterators.product([1:length(arr_lon);], [1:length(arr_lat);], [1:length(arr_dep);]));
 
     Threads.@threads for (i, j, k) in points
-        if (progress==true)&(i==1)&(j==1)
+        if (progress == true) & (i == 1) & (j == 1)
             @info("At level $k")
         end
 
@@ -259,27 +229,24 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
             par_vals_raw = par[i,j,:]
             par_vals, par_t_vals = extract_valid(par_vals_raw, par_t, par_fill)
             
-            if beta==nothing
+            if att == nothing
                 kd_vals_raw = kd[i,j,:]
                 kd_vals, kd_t_vals = extract_valid(kd_vals_raw, kd_t, kd_fill)
             else
-                beta_vals=beta[i,j,k,:]
+                att_vals = att[i,j,k,:]
             end
 
-            if (length(par_vals) > 6)# & (beta!=nothing) | (length(kd_vals) > 6)
+            if (length(par_vals) > 6)# & (att!=nothing) | (length(kd_vals) > 6)
                 par_itp = Interpolations.LinearInterpolation(par_t_vals, par_vals, extrapolation_bc=Flat())
-                if beta==nothing
+                if att == nothing
                     kd_itp = Interpolations.LinearInterpolation(kd_t_vals, kd_vals, extrapolation_bc=Flat())
                     irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* exp.(-kd_itp.(arr_time) .* depth), extrapolation_bc=Flat())
                 else
-                    irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* beta_vals, extrapolation_bc=Flat())
+                    irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* att_vals, extrapolation_bc=Flat())
                 end
-                solution, results = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt);
-                
-                all_results[1,i,j,k,1:length(results.area)] = results.area;
-                all_results[2,i,j,k,1:length(results.nitrogen)] = results.nitrogen;
-                all_results[3,i,j,k,1:length(results.carbon)] = results.carbon;
-                all_results[4,i,j,k,1:length(results.gross_nitrate)] = results.gross_nitrate
+                solution = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt, false);
+
+                all_results[:,i,j,k,1:size(solution)[1]] = reshape(solution', size(solution)[2], 1, 1, 1, size(solution)[1])
             end
         end
     end
@@ -288,6 +255,7 @@ end
 
 """
     Kelp.extract_valid(raw,raw_time,fill)
+
 Extracts the valid values from an array by checking against a fill value and returns the valids and corresponding time.
 
 Parameters:
@@ -302,12 +270,36 @@ Returns:
 function extract_valid(raw, raw_time, fill)
     vals, times = [], []
     for (ind, val) in enumerate(raw)
-        if (val != fill)&(!isnan(val))
+        if (val != fill) & (!isnan(val))
             push!(vals, val)
             push!(times, raw_time[ind])
         end
     end
     return (vals, times)
+end
+
+"""
+    Kelp.normdeltal(lat)
+
+Generates λ as described in Model desctiptions/Main equations/Photoperiodic effect (page 763) in the origional paper.
+
+Parameters:
+- `raw`: the array to check
+- `raw_time`: the corresponding time array
+- `fill`: the fill value to check against
+
+Returns:
+- `vals`: the filtered values
+- `time`: corresponding times
+"""
+function normdeltal(lat)
+    theta = 0.2163108 .+ 2 .* atan.(0.9671396 .* tan.(0.00860 .* ([1:365;] .- 186)))
+    dec = asin.(0.39795 .* cos.(theta))
+    p = 0.8333
+    delts = 24 .- (24 / pi) .* acos.((sin(p * pi / 180) .+ sin(lat * pi / 180) .* sin.(dec)) ./ (cos(lat * pi / 180) .* cos.(dec)))
+    DeltaL = diff(delts)
+    push!(DeltaL,DeltaL[end])
+    return DeltaL ./ findmax(DeltaL)[1]
 end
 end # module
 """
