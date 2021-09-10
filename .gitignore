@@ -9,3 +9,4 @@ src/residual.jl
 presentations/*
 *.nc
 doc/build/*
+*.cov

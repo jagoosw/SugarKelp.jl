@@ -74,7 +74,7 @@ Parameters: `λ`: normalised change in day length
 
 Returns: seasonal influence on growth
 """
-f_photo(λ)=a_1 * (1 + sign(λ) * abs(λ)^.5) + a_2
+f_photo(λ) = a_1 * (1 + sign(λ) * abs(λ)^.5) + a_2
 
 """
     Kelp.ν(a)
@@ -102,7 +102,7 @@ Returns: specific nitrate uptake rate
 Notes:
 - Names eval_j because it looks better in Kelp.equations to have j and you can't reuse it
 """
-eval_j(ex_n,n,u)=J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65))
+eval_j(ex_n,n,u) = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65))
 
 """
     Kelp.p(temp,irr)
@@ -116,9 +116,9 @@ Parameters:
 Returns: gross photosynthesis function
 """
 function p(temp, irr)
-    p_max=P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (1 + exp(T_APL / (temp + 273.15) - T_APL / T_PL) + exp(T_APH / T_PH - T_APH / (temp + 273.15)))
+    p_max = P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (1 + exp(T_APL / (temp + 273.15) - T_APL / T_PL) + exp(T_APH / T_PH - T_APH / (temp + 273.15)))
     β_func(x) = p_max - (α * I_sat / log(1 + α / x)) * (α / (α + x)) * (x / (α + x))^(x / α)
-    β=find_zero(β_func, (0, 0.1), Bisection())
+    β = find_zero(β_func, (0, 0.1), Bisection())
     p_s = α * I_sat / log(1 + α / β)
     return p_s * (1 - exp(-α * irr / p_s)) * exp(-β * irr / p_s) 
 end
@@ -136,7 +136,7 @@ Parameters:
 
 Returns: respiration function
 """
-function r(temp,μ,j,resp_model)
+function r(temp, μ, j, resp_model)
     if resp_model == 1
         return R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
     elseif resp_model == 2
@@ -152,7 +152,6 @@ e(c) = 1 - exp(γ * (C_min - c))
 Solves the papers main equations.
 
 Parameters:
-- `t`: time /days
 - `a`: area /dm^2
 - `n`: nitrate reserve /gN/gSW
 - `c`: carbon reserve /gC/gSW
@@ -170,18 +169,18 @@ Returns:
 - `dc`: results of equation 9, the carbon rate
 - `j`: the specific nitrate uptake rate
 """
-function equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
-    μ = eval_μ(a,n,c,temp,λ)
-    j = eval_j(ex_n,n,u)
+function equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
+    μ = eval_μ(a, n, c, temp, λ)
+    j = eval_j(ex_n, n, u)
 
-    #Equation 1
+    # Equation 1
     da = (μ - ν(a)) * a
-    #Equation 7
+    # Equation 7
     dn = j / K_A - μ * (n + N_struct)
-    #Equation 9
-    dc = (p(temp,irr) * (1 - e(c)) - r(temp,μ,j,resp_model)) / K_A - μ * (c + C_struct)
+    # Equation 9
+    dc = (p(temp, irr) * (1 - e(c)) - r(temp, μ, j, resp_model)) / K_A - μ * (c + C_struct)
 
-    #"Extreme carbon limitation"
+    # "Extreme carbon limitation"
     if c + dc < C_min
         da -= (a * (C_min - c) / C_struct) * .5 * dt
         dc = (C_min - c) * .5 * dt
@@ -229,11 +228,10 @@ function solver!(y::Vector{Float64}, params, t::Float64)
         d = trunc(Int, mod(floor(t), 365) + 1) 
         λ = λ_arr[d] 
 
-        da, dn, dc, j = equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
+        da, dn, dc, j = equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
 
     else
         da, dn, dc, j = 0, 0, 0, 0 
-        @warn "Area reached 0"
     end
     return (vcat(da, dn, dc, j * a))
 end
@@ -262,7 +260,7 @@ Returns:
 - `solution`: the ODE library solution
 - `results`: dataframe or array of area/nitrogen reserve/carbon reserve/total nitrate update. All others useful quantities can be easily derived.
 """
-function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
+function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
     include(params)
     λ_arr = gen_λ(lat)
     params = (u, temp, irr, ex_n, λ_arr, resp_model, dt)
@@ -285,7 +283,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/
 end
 
 """
-    Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, att = nothing, params="src/parameters/origional.jl", resp_model=1, dt=1)
+    Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, att = nothing, params="src/parameters/origional.jl", resp_model=1, dt=1, progress=true)
 Solve the model for a (spacially) fixed grid of inputs.
 
 Parameters:
@@ -324,11 +322,11 @@ temporally sparse so need to be checked and interpolated in time for each point.
 
 no3,temp and u need to be of the same shape and size and with the values corresponding to the same position/time.
 """
-function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, att=nothing, params::String="src/parameters/origional.jl", resp_model::Int=1, dt=1, progress::Bool=true)
+function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, att=nothing, params::String="../src/parameters/origional.jl", resp_model::Int=1, dt=1, progress::Bool=true)
     # Would like to annotate type for the others but for some reason they making tuples of "Number" doesn't isn't satisfied
     par, par_t, par_fill = par_data;kd, kd_t, kd_fill = kd_data
 
-    all_results::Array{Float64,5} = repeat([NaN], 4, length(arr_lon), length(arr_lat), length(arr_dep), floor(Int, nd) + 1);
+    all_results::Array{Float64,5} = repeat([NaN], 4, length(arr_lon), length(arr_lat), length(arr_dep), round(Int, nd / dt + 1));
     points::Array{Vector{Int64},3} = collect.(Iterators.product([1:length(arr_lon);], [1:length(arr_lat);], [1:length(arr_dep);]));
 
     Threads.@threads for (i, j, k) in points
@@ -367,7 +365,7 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
                 solution = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt, false);
 
                 all_results[:,i,j,k,1:size(solution)[1]] = reshape(solution', size(solution)[2], 1, 1, 1, size(solution)[1])
-            end
+    end
         end
     end
     return all_results
@@ -413,12 +411,11 @@ function gen_λ(lat)
     p = 0.8333
     d = 24 .- (24 / pi) .* acos.((sin(p * pi / 180) .+ sin(lat * pi / 180) .* sin.(δ)) ./ (cos(lat * pi / 180) .* cos.(δ)))
     λ = diff(d)
-    push!(λ,λ[end])
+    push!(λ, λ[end])
     return λ ./ findmax(λ)[1]
 end
-end # module
 """
-    get_ind(val, list, tol)
+    Kelp.get_ind(val, list, tol)
 Function that finds the index in the list with the closest value to val. Error is thrown if no result is within tollerance, tol.
 
 Parameters:
@@ -441,7 +438,7 @@ function get_ind(val, list, tol)
 end
 
 """
-    interp_deps(arr, origional_depths, desired_depths, invalid_val)
+    Kelp.interp_deps(arr, origional_depths, desired_depths, invalid_val)
 Function to interpolate a 4D array in the last dimension. Useful for lineaising the depth steps of the arrays
 from Copurnicus as they have increasingly corse step sizes.
 
@@ -485,3 +482,4 @@ function interp_deps(arr, origional_depths, desired_depths, invalid_val)
 
     return new_arr
 end
+end # module

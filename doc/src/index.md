@@ -1,26 +1,17 @@
 # Kelp.jl
-[Kelp.jl](https://github.com/jagoosw/Kelp.jl) is an implementation of the sugar kelp growth model from [Broch and Slagstad model of the growth and composition of _Saccharina latissima_  Kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
+[Kelp.jl](https://github.com/jagoosw/Kelp.jl)  is an implimentation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
+The main way to solve a single frond is `Kelp.solvekelp` and grids can be solved by `Kelp.solvegrid`.
 
-# Getting Started
-## Current dependencies
-- RecursiveArrayTools
-- DiffEqBase
-- OrdinaryDiffEq
-- Roots
-- Interpolations
-- DataFrames
-- Plots
-- Dates
-- Measures
-- CSV
-- LaTeXStrings
+Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/Kelp/blob/main/changes.pdf).
 
-Install them all with:
-
-`import Pkg; Pkg.add(["RecursiveArrayTools", "DiffEqBase", "OrdinaryDiffEq", "Roots", "Interpolations", "DataFrames", "Plots", "Dates", "Measures", "CSV", "LaTeXStrings"])`
-
-You can possibly also be able to run `import Pkg` then `[dev Kelp` from the directory below this repository. 
+The package is not yet registered so to use, download this repository and then install the dependencies by executing (from this directory):
+```
+>julia
+julia> import Pkg
+julia> ] activate .
+julia> instantiate
+```
 ## Running a model
 
 ```
