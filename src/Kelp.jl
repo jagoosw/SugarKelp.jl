@@ -12,60 +12,176 @@ using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, Da
 # n: Nitrogen reserve relative to dry weight (gN/(g sw))
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 
-
-""""
-    Kelp.equations(t, a, n, c, u, temp, irr, ex_n, lambda, resp_model, dt)
-
-Solves the main equations given scalar values.
-
-Docstring update comming soon.
 """
-function equations(t, a, n, c, u, temp, irr, ex_n, lambda, resp_model, dt)
-    p_max =
-                P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (
-                    1 +
-                    exp(T_APL / (temp + 273.15) - T_APL / T_PL) +
-                    exp(T_APH / T_PH - T_APH / (temp + 273.15))
-                )
+    Kelp.eval_μ(a,n,c,temp,λ)
 
-    beta_func(x) = p_max - (alpha * I_sat / log(1 + alpha / x)) * (alpha / (alpha + x)) * (x / (alpha + x))^(x / alpha)
-    beta = find_zero(beta_func, (0, 0.1), Bisection())
+Solves Equation 2, the specific growth rate.
 
-    p_s = alpha * I_sat / log(1 + alpha / beta)
-    p = p_s * (1 - exp(-alpha * irr / p_s)) * exp(-beta * irr / p_s) # gross photosynthesis
-    e = 1 - exp(gamma * (C_min - c)) # carbon exudation
-        
-    f_area = m_1 * exp(-(a / A_0)^2) + m_2 # effect of size on growth rate
+Parameters:
+- `a`: area /dm^2
+- `n`: nitrate reserve /gN/gSW
+- `c`: carbon reserve /gC/gSW
+- `temp`: temperature /°C
+- `λ`: normalised change in day length
 
-    if -1.8 <= temp < 10 # effect of temperature on growth rate
-        f_temp = 0.08 * temp + 0.2
+Returns: specific growth rate
+
+Notes:
+- Names eval_μ because it looks better in Kelp.equations to have μ and you can't reuse it
+"""
+eval_μ(a,n,c,temp,λ) = f_area(a) * f_temp(temp) * f_photo(λ) * min(1 - N_min / n, 1 - C_min / c)
+
+"""
+    Kelp.f_area(a)
+
+Solves Equation 3, the effect of area on growth
+
+Parameters: `a`, area /dm^2
+
+Returns: effect of area on growth
+"""
+f_area(a) = m_1 * exp(-(a / A_0)^2) + m_2
+
+"""
+    Kelp.f_temp(temp)
+
+Solves Equation 4, the effect of temperature on growth
+
+Parameters: `temp`: temperature /°C
+
+Returns: effect of temperature on growth
+"""
+function f_temp(temp)
+    if -1.8 <= temp < 10 
+        return 0.08 * temp + 0.2
     elseif 10 <= temp <= 15
-        f_temp = 1
+        return 1
     elseif 15 < temp <= 19
-        f_temp = 19 / 4 - temp / 4
+        return 19 / 4 - temp / 4
     elseif temp > 19
-        f_temp = 0
+        return 0
     else
-        @warn "Out of range temperature, $temp"
-        f_temp = 0
+        return 0
     end
+end
 
-    f_photo = a_1 * (1 + sign(lambda) * abs(lambda)^.5) + a_2
+"""
+    Kelp.f_photo(λ)
 
-    mu = f_area * f_temp * f_photo * min(1 - N_min / n, 1 - C_min / c) # gross area specific growth rate
-    nu = 1e-6 * exp(epsilon * a) / (1 + 1e-6 * (exp(epsilon * a) - 1)) # front erosion
-    j = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65)) # nitrate uptake rate
+Solves Equation 5, the seasonal influence on growth rate
 
+Parameters: `λ`: normalised change in day length
+
+Returns: seasonal influence on growth
+"""
+f_photo(λ)=a_1 * (1 + sign(λ) * abs(λ)^.5) + a_2
+
+"""
+    Kelp.ν(a)
+
+Solves Equation 6, the specific frond erosion rate.
+
+Parameters: `a`: area /dm^2
+
+Returns: specific frond erosion rate
+"""
+ν(a) = 1e-6 * exp(ϵ * a) / (1 + 1e-6 * (exp(ϵ * a) - 1))
+
+"""
+    Kelp.eval_j(ex_n,n,u)
+
+Solves Equation 8, the specific nitrate uptake rate.
+
+Parameters:
+- `ex_n`: external nitrate concentration /mmol/m^3
+- `n`: nitrogen reserve /gN/gSW
+- `u`: water speed /m/s
+
+Returns: specific nitrate uptake rate
+
+Notes:
+- Names eval_j because it looks better in Kelp.equations to have j and you can't reuse it
+"""
+eval_j(ex_n,n,u)=J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65))
+
+"""
+    Kelp.p(temp,irr)
+
+Solves Equation 10, the gross photosynthesis.
+
+Parameters:
+- `temp`: temperature /°C
+- `irr`: irradiance /μmol photons/m^2/s
+
+Returns: gross photosynthesis function
+"""
+function p(temp, irr)
+    p_max=P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (1 + exp(T_APL / (temp + 273.15) - T_APL / T_PL) + exp(T_APH / T_PH - T_APH / (temp + 273.15)))
+    β_func(x) = p_max - (α * I_sat / log(1 + α / x)) * (α / (α + x)) * (x / (α + x))^(x / α)
+    β=find_zero(β_func, (0, 0.1), Bisection())
+    p_s = α * I_sat / log(1 + α / β)
+    return p_s * (1 - exp(-α * irr / p_s)) * exp(-β * irr / p_s) 
+end
+
+"""
+    Kelp.r(temp,μ,j,resp_model)
+
+Solves Equation 14 (2012) if resp_model=1, or Equation 2 (2013) if resp_model=2
+
+Parameters:
+- `temp`: temperature /°C
+- `μ`: specific growth rate
+- `j`: specific nitrate uptake rate
+- `resp_model`: choice of resparation model (see description)
+
+Returns: respiration function
+"""
+function r(temp,μ,j,resp_model)
     if resp_model == 1
-        r = R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
+        return R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
     elseif resp_model == 2
-        r = (R_A * (mu / mu_max + j / J_max) + R_B) * exp(T_AR / T_R1 - T_AR / (temp + 273.15))
+        return (R_A * (μ / μ_max + j / J_max) + R_B) * exp(T_AR / T_R1 - T_AR / (temp + 273.15))
     end
+end
 
-    da = (mu - nu) * a
-    dn = j / K_A - mu * (n + N_struct)
-    dc = (p * (1 - e) - r) / K_A - mu * (c + C_struct)
-            
+e(c) = 1 - exp(γ * (C_min - c))
+
+"""
+    Kelp.equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
+
+Solves the papers main equations.
+
+Parameters:
+- `t`: time /days
+- `a`: area /dm^2
+- `n`: nitrate reserve /gN/gSW
+- `c`: carbon reserve /gC/gSW
+- `u`: water speed /m/s
+- `temp`: temperature /°C
+- `irr`: irradiance / μmol photons/m^2/s 
+- `ex_n`: external nitrate concentration /mmol m^3
+- `λ`: normalised change in day length
+- `resp_model`: choice of resparation model (see Kelp.r)
+- `dt`: timestep length /days
+
+Returns:
+- `da`: results of equation 1, the area rate
+- `dn`: results of equation 7, the nitrogen rate
+- `dc`: results of equation 9, the carbon rate
+- `j`: the specific nitrate uptake rate
+"""
+function equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
+    μ = eval_μ(a,n,c,temp,λ)
+    j = eval_j(ex_n,n,u)
+
+    #Equation 1
+    da = (μ - ν(a)) * a
+    #Equation 7
+    dn = j / K_A - μ * (n + N_struct)
+    #Equation 9
+    dc = (p(temp,irr) * (1 - e(c)) - r(temp,μ,j,resp_model)) / K_A - μ * (c + C_struct)
+
+    #"Extreme carbon limitation"
     if c + dc < C_min
         da -= (a * (C_min - c) / C_struct) * .5 * dt
         dc = (C_min - c) * .5 * dt
@@ -77,17 +193,21 @@ end
 """
     Kelp.solver!(y, params, t)
 
-Equations outlined in the __Main Equations__ section of the paper to be solved by the ODE library.
+Interface for OrdinaryDiffEq library, extracts current enviromental variable values and solves equations for each timestep.
+
+Parameters:
 - `y`: the current state of the system as a vector (area, nitrate reserve, carbon reserve).
 - `params`: the variable parameters of the model:
     - `u_arr`: interpolation object of the water speed in time
     - `temp_arr`: interpolation object of the temperature in time
     - `irr_arr`: interpolation object of the irradianec in time
     - `ex_n_arr`: interpolation object of the external nitrate concentration in time
-    - `NormDeltaL`: the normalised change in day length
+    - `λ_arr`: array of the normalised change in day length
     - `resp_model`: the choice of respiration model, 1 is the origional from the 2012 paper and 2 is the modified version in 2013
     - `dt`: the time step length, this is important as it is used in the "extreme carbon limit" part of the equations, see NB.
 - `t`: the current time (with respect to the time in the interpolations)
+
+Returns: array of da,dn,dc,j*a - the rate of a/n/c and the nitrate uptake rate
 
 Note:
 These equations **must** be solved with an algorithm with fixed time steps and known, constant sub timestep lengths.
@@ -99,7 +219,7 @@ function solver!(y::Vector{Float64}, params, t::Float64)
     a, n, c = y
 
     if a > 0
-        u_arr, temp_arr, irr_arr, ex_n_arr, NormDeltaL, resp_model, dt = params
+        u_arr, temp_arr, irr_arr, ex_n_arr, λ_arr, resp_model, dt = params
 
         u = u_arr(t)::Float64
         temp = temp_arr(t)::Float64
@@ -107,9 +227,9 @@ function solver!(y::Vector{Float64}, params, t::Float64)
         ex_n = ex_n_arr(t)::Float64
 
         d = trunc(Int, mod(floor(t), 365) + 1) 
-        lambda = NormDeltaL[d] 
+        λ = λ_arr[d] 
 
-        da, dn, dc, j = equations(t, a, n, c, u, temp, irr, ex_n, lambda, resp_model, dt)
+        da, dn, dc, j = equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
 
     else
         da, dn, dc, j = 0, 0, 0, 0 
@@ -144,8 +264,8 @@ Returns:
 """
 function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
     include(params)
-    NormDeltaL = normdeltal(lat)
-    params = (u, temp, irr, ex_n, NormDeltaL, resp_model, dt)
+    λ_arr = gen_λ(lat)
+    params = (u, temp, irr, ex_n, λ_arr, resp_model, dt)
 
     y_0 = vcat(a_0, n_0, c_0, 0)
 
@@ -279,31 +399,26 @@ function extract_valid(raw, raw_time, fill)
 end
 
 """
-    Kelp.normdeltal(lat)
+    Kelp.gen_λ(lat)
 
 Generates λ as described in Model desctiptions/Main equations/Photoperiodic effect (page 763) in the origional paper.
 
-Parameters:
-- `raw`: the array to check
-- `raw_time`: the corresponding time array
-- `fill`: the fill value to check against
+Parameter: `lat`, the latitude
 
-Returns:
-- `vals`: the filtered values
-- `time`: corresponding times
+Returns: array of normalised change in day length
 """
-function normdeltal(lat)
-    theta = 0.2163108 .+ 2 .* atan.(0.9671396 .* tan.(0.00860 .* ([1:365;] .- 186)))
-    dec = asin.(0.39795 .* cos.(theta))
+function gen_λ(lat)
+    θ = 0.2163108 .+ 2 .* atan.(0.9671396 .* tan.(0.00860 .* ([1:365;] .- 186)))
+    δ = asin.(0.39795 .* cos.(θ))
     p = 0.8333
-    delts = 24 .- (24 / pi) .* acos.((sin(p * pi / 180) .+ sin(lat * pi / 180) .* sin.(dec)) ./ (cos(lat * pi / 180) .* cos.(dec)))
-    DeltaL = diff(delts)
-    push!(DeltaL,DeltaL[end])
-    return DeltaL ./ findmax(DeltaL)[1]
+    d = 24 .- (24 / pi) .* acos.((sin(p * pi / 180) .+ sin(lat * pi / 180) .* sin.(δ)) ./ (cos(lat * pi / 180) .* cos.(δ)))
+    λ = diff(d)
+    push!(λ,λ[end])
+    return λ ./ findmax(λ)[1]
 end
 end # module
 """
-    get_int(val, list, tol)
+    get_ind(val, list, tol)
 Function that finds the index in the list with the closest value to val. Error is thrown if no result is within tollerance, tol.
 
 Parameters:

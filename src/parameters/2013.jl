@@ -1,10 +1,9 @@
-# Model parameters
 const A_0 = 4.5#6          # Growth rate adjustment parameter
-const alpha = 4.15e-5 * 24 * 10^6 / (24 * 60 * 60)#3.75e-5 * 24 * 10^6 / (24 * 60 * 60) # photosynthetic efficiency 
+const α = 4.15e-5 * 24 * 10^6 / (24 * 60 * 60)#3.75e-5 * 24 * 10^6 / (24 * 60 * 60) # photosynthetic efficiency 
 const C_min = 0.01     # Minimal carbon reserve
 const C_struct = 0.2   # Amount of carbon per unit dry weight of structural mass
-const gamma = 0.5# Exudation parameter
-const epsilon = 0.22   # Frond erosion parameter
+const γ = 0.5# Exudation parameter
+const ϵ = 0.22   # Frond erosion parameter
 const I_sat = 90 * 24*60*60/(10^6)#200 * 24 * 60 * 60 / (10^6)  # Irradiance for maximal photosynthesis
 const J_max = 1.4e-4 * 24# Maximal nitrate uptake (gN/dm^2/h converted to gN/dm^2/day)
 const K_A = .5#0.6        # Structural dry weight per unit area
@@ -15,7 +14,7 @@ const N_min = 0.0126#0.01     # Minimal nitrogen reserve
 const N_max = 0.0216#0.022    # Maximal nitrogen reserve
 const m_2 = 0.039/(2*(1-N_min/N_max))#0.036# 0.03       # Growth rate adjustment parameter
 const m_1 = 0.18/(2*(1-N_min/N_max))-m_2# 0.1085     # Growth rate adjustment parameter
-const mu_max = 0.18    # Maximal area specific growth ratio
+const μ_max = 0.18    # Maximal area specific growth ratio
 const N_struct = 0.0146#0.01  # Amount of nitrogen per unit dry weight of structural mass
 const P_1 = 1.22e-3 * 24    # Maximal photosynthetic rate at T = T?P1K converted to day^-1
 const P_2 = 1.3e-3 * 24    # Maximal photosynthetic rate at T = T?P2K converted to day^-1
