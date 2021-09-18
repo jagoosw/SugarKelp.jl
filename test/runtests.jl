@@ -1,6 +1,6 @@
 using Kelp, Test, Interpolations, DataFrames
 
-@info "These tests check if the code has been broken but does not thoroughly check if it produces correct results (for now at least)"
+@info "These tests check if the code has been broken but does not thoroughly check if it produces correct results (for now at least). They are also so monalithic you can't actually tell which bit you've broken."
 
 const arr_lat = [1:3;]
 const arr_lon = [1:3;]

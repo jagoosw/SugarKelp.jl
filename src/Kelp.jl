@@ -255,14 +255,17 @@ Parameters:
 - `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
 - `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
 - `dataframe`: output as a dataframe, default to true. Alternative is an array (faster)
+- `λ_arr`: array of normalised change of day length, defaults to nothing which generates the default one
 
 Returns:
 - `solution`: the ODE library solution
 - `results`: dataframe or array of area/nitrogen reserve/carbon reserve/total nitrate update. All others useful quantities can be easily derived.
 """
-function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
+function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true, λ_arr=nothing)
     include(params)
-    λ_arr = gen_λ(lat)
+    if λ_arr==nothing
+        λ_arr = gen_λ(lat)
+    end
     params = (u, temp, irr, ex_n, λ_arr, resp_model, dt)
 
     y_0 = vcat(a_0, n_0, c_0, 0)
