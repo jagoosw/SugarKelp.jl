@@ -1,5 +1,5 @@
 module Kelp
-using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, DataFrames
+using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, DiffEqCallbacks, Roots, Interpolations, DataFrames
 # Input parameters
 # t: time (days)
 # irr: irradiance (micro mol photons / m^2 / s)
@@ -180,15 +180,16 @@ function equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
     # Equation 9
     dc = (p(temp, irr) * (1 - e(c)) - r(temp, μ, j, resp_model)) / K_A - μ * (c + C_struct)
 
-    # "Extreme carbon limitation"
-    if c + dc < C_min
-        da -= (a * (C_min - c) / C_struct) * .5 * dt
-        dc = (C_min - c) * .5 * dt
-    end
-
     return da, dn, dc, j
 end
 
+function extremecarbon(y, t, integrator)
+    if y[3]<C_min
+        y[1]-=y[1]*(C_min-y[3])/C_struct
+        y[3]=C_min
+        println("ext carb")
+    end
+end
 """
     Kelp.solver!(y, params, t)
 
@@ -271,7 +272,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../s
     y_0 = vcat(a_0, n_0, c_0, 0)
 
     solver = ODEProblem(solver!, y_0, (t_i, t_i + nd), params)
-    solution = OrdinaryDiffEq.solve(solver, RK4(), dt=dt, adaptive=false)# Please keep the RK4 algorithm otherwise the extreme caron limit needs to be changed
+    solution = OrdinaryDiffEq.solve(solver, Vern8(),callback=FunctionCallingCallback(extremecarbon,func_everystep=true))# Please keep the RK4 algorithm otherwise the extreme caron limit needs to be changed
 
     if dataframe == true
         results = DataFrame(area=[], nitrogen=[], carbon=[], gross_nitrate=[], time=[])
@@ -281,6 +282,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../s
         end
         return(solution, results)
     else
+        println(solution.t)
         return vcat(transpose.(solution.u)...)
     end
 end

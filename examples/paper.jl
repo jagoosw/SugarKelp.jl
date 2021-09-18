@@ -1,7 +1,7 @@
 using Plots, Dates, Measures, Interpolations, CSV, DataFrames, LaTeXStrings
 
 include("../src/Kelp.jl")
-include("../src/parameters/2013.jl")
+include("../src/parameters/origional.jl")
 
 # Loading data scraped from their paper
 offset = 4 * 31 + 28 + 30 * 2.0
@@ -28,7 +28,7 @@ irr_arr = Interpolations.LinearInterpolation(irr_t, irr, extrapolation_bc=Flat()
 
 a_0 = 30;n_0 = 0.01;c_0 = 0.6
 
-solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp_arr, irr_arr, no3_arr, lat, a_0, n_0, c_0, "../src/parameters/2013.jl", 1)
+solution, results = Kelp.solvekelp(t_i, nd, u_arr, temp_arr, irr_arr, no3_arr, lat, a_0, n_0, c_0, "src/parameters/origional.jl", 1)
 
 # Horrible plotting and loading/inline horriblness from their paper from here down
 pyplot()
