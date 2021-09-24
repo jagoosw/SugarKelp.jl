@@ -1,21 +1,4 @@
-# Kelp.jl
-[Kelp.jl](https://github.com/jagoosw/Kelp.jl)  is an implimentation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_](https://link.springer.com/article/10.1007/s10811-011-9695-y).
-
-The main way to solve a single frond is `Kelp.solvekelp` and grids can be solved by `Kelp.solvegrid`.
-
-Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/Kelp/blob/main/changes.pdf).
-
-The package is not yet registered so to use, download this repository and then install the dependencies by executing (from this directory):
-```
->julia
-julia> import Pkg
-julia> ] activate .
-julia> instantiate
-```
-## Running a model
-These examples for running the model both at a single point and on a grid can be found in [examples.ipynb](https://github.com/jagoosw/Kelp.jl/blob/main/examples/example.ipynb).
-
-### Example 1 - Single Point
+# Example 1 - Single Point
 
 
 ```julia
@@ -92,7 +75,13 @@ Solutions contains the raw output of the ODE solver while results is refactored 
 ```julia
 results
 ```
-*dataframe as a table that can't be rendered here*
+
+
+
+
+<div class="data-frame"><p>601 rows × 5 columns</p><table class="data-frame"><thead><tr><th></th><th>area</th><th>nitrogen</th><th>carbon</th><th>gross_nitrate</th><th>time</th></tr><tr><th></th><th title="Any">Any</th><th title="Any">Any</th><th title="Any">Any</th><th title="Any">Any</th><th title="Any">Any</th></tr></thead><tbody><tr><th>1</th><td>0.1</td><td>0.022</td><td>0.3</td><td>0.0</td><td>1.0</td></tr><tr><th>2</th><td>0.109134</td><td>0.0189379</td><td>0.267903</td><td>8.52351e-8</td><td>2.0</td></tr><tr><th>3</th><td>0.116672</td><td>0.0167756</td><td>0.247928</td><td>3.68739e-7</td><td>3.0</td></tr><tr><th>4</th><td>0.122468</td><td>0.0152978</td><td>0.237388</td><td>8.09489e-7</td><td>4.0</td></tr><tr><th>5</th><td>0.126655</td><td>0.014318</td><td>0.23388</td><td>1.36651e-6</td><td>5.0</td></tr><tr><th>6</th><td>0.129536</td><td>0.0136848</td><td>0.235377</td><td>2.00431e-6</td><td>6.0</td></tr><tr><th>7</th><td>0.131451</td><td>0.0132832</td><td>0.240287</td><td>2.69541e-6</td><td>7.0</td></tr><tr><th>8</th><td>0.132698</td><td>0.0130318</td><td>0.247446</td><td>3.42009e-6</td><td>8.0</td></tr><tr><th>9</th><td>0.133506</td><td>0.0128758</td><td>0.256043</td><td>4.16497e-6</td><td>9.0</td></tr><tr><th>10</th><td>0.134031</td><td>0.0127794</td><td>0.265536</td><td>4.92123e-6</td><td>10.0</td></tr><tr><th>11</th><td>0.134378</td><td>0.01272</td><td>0.27557</td><td>5.68316e-6</td><td>11.0</td></tr><tr><th>12</th><td>0.134615</td><td>0.0126834</td><td>0.28592</td><td>6.4471e-6</td><td>12.0</td></tr><tr><th>13</th><td>0.134782</td><td>0.0126608</td><td>0.296442</td><td>7.21063e-6</td><td>13.0</td></tr><tr><th>14</th><td>0.134907</td><td>0.0126468</td><td>0.307046</td><td>7.97216e-6</td><td>14.0</td></tr><tr><th>15</th><td>0.135005</td><td>0.0126382</td><td>0.317676</td><td>8.73057e-6</td><td>15.0</td></tr><tr><th>16</th><td>0.135087</td><td>0.0126328</td><td>0.328295</td><td>9.48508e-6</td><td>16.0</td></tr><tr><th>17</th><td>0.135158</td><td>0.0126295</td><td>0.338884</td><td>1.02351e-5</td><td>17.0</td></tr><tr><th>18</th><td>0.135223</td><td>0.0126274</td><td>0.349427</td><td>1.09801e-5</td><td>18.0</td></tr><tr><th>19</th><td>0.135284</td><td>0.0126261</td><td>0.359918</td><td>1.17197e-5</td><td>19.0</td></tr><tr><th>20</th><td>0.135342</td><td>0.0126253</td><td>0.370352</td><td>1.24535e-5</td><td>20.0</td></tr><tr><th>21</th><td>0.135398</td><td>0.0126248</td><td>0.380726</td><td>1.31812e-5</td><td>21.0</td></tr><tr><th>22</th><td>0.135452</td><td>0.0126244</td><td>0.391039</td><td>1.39026e-5</td><td>22.0</td></tr><tr><th>23</th><td>0.135506</td><td>0.0126242</td><td>0.401291</td><td>1.46173e-5</td><td>23.0</td></tr><tr><th>24</th><td>0.135559</td><td>0.012624</td><td>0.411481</td><td>1.5325e-5</td><td>24.0</td></tr><tr><th>25</th><td>0.13561</td><td>0.0126239</td><td>0.42161</td><td>1.60256e-5</td><td>25.0</td></tr><tr><th>26</th><td>0.135662</td><td>0.0126238</td><td>0.431679</td><td>1.67187e-5</td><td>26.0</td></tr><tr><th>27</th><td>0.135712</td><td>0.0126237</td><td>0.441689</td><td>1.74041e-5</td><td>27.0</td></tr><tr><th>28</th><td>0.135762</td><td>0.0126237</td><td>0.451641</td><td>1.80815e-5</td><td>28.0</td></tr><tr><th>29</th><td>0.135812</td><td>0.0126236</td><td>0.461535</td><td>1.87509e-5</td><td>29.0</td></tr><tr><th>30</th><td>0.135861</td><td>0.0126235</td><td>0.471374</td><td>1.94119e-5</td><td>30.0</td></tr><tr><th>&vellip;</th><td>&vellip;</td><td>&vellip;</td><td>&vellip;</td><td>&vellip;</td><td>&vellip;</td></tr></tbody></table></div>
+
+
 
 It is useful to convert the results into total carbon and nitrogen masses (rather than the reserves that the model returns), this requires some of the parameters.
 
@@ -120,7 +109,7 @@ plot!(results.time,total_nitrogen,ylabel="Total Nitrogen (gN)",sp=3)
 
 
 
-### Example 2 - Grid
+# Example 2 - Grid
 
 For a grid we must set initial conditions as with a single point
 
@@ -154,7 +143,43 @@ This function automatically paralalises to however many threads you start julia 
 ```julia
 @time results = Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, arr_no3, arr_temp, arr_u, (arr_irr, arr_t, NaN), (nothing, nothing, nothing), arr_beta, "../src/parameters/2013.jl", 2);
 ```
-...
+
+    ┌ Info: At level 1
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 2
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 3
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 4
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 5
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 6
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 7
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 8
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 9
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 10
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 11
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 12
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 13
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 14
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 15
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    ┌ Info: At level 16
+    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+
+
+     32.622805 seconds (135.82 M allocations: 4.460 GiB, 2.42% gc time, 25.27% compilation time)
+
 
 The output from this is an array with area/nitrogen reserve/carbon reserve/nitrate uptake in the first dimention, then lon,lat,dep,time in the others. We can extract the total carbon and nitrogen again:
 
@@ -200,16 +225,16 @@ hms=[
 plot!(hms...,layout=grid(1,3),size=(1000,200))
 ```
 
+
+
+
+    
 ![png](output_28_0.png)
+    
 
-# Model Verification
-The models outputs compared with figure 3 in Broch and Slagstad 2012 are shown below:
-![B&S2012 Figure 3 equivalent.](img/paper_comparison.png)
 
-The code to reproduce this can be found in the example folder.
 
-The discrepancies may be down to the inaccuracy of reporting of the model parameters or the difficulty extracting the input data from the paper. 
 
-Changes to the parameters from those published are detailed [here](https://github.com/jagoosw/Kelp/blob/master/changes.pdf).
+```julia
 
-## Check on the right for function documentation
+```

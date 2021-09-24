@@ -7,9 +7,9 @@ Documenter.makedocs(
     clean = true,
     doctest = true,
     modules = Module[Kelp],
-    repo = "https://github.com/jagoosw/Kelp",
+    repo = "https://github.com/jagoosw/Kelp.jl",
     highlightsig = true,
-    sitename = "Kelp Documentation",
+    sitename = "Kelp.jl Documentation",
     expandfirst = [],
     pages = [
         "Index" => "index.md",
