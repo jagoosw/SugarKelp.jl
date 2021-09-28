@@ -1,6 +1,6 @@
 # Kelp.jl
 
-[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)
+[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/Kelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/Kelp.jl)[![codecov](https://codecov.io/gh/jagoosw/Kelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/Kelp.jl)
 
 Implementation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_ kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
@@ -69,7 +69,7 @@ plot!(time,irr,ylabel="PAR (μmol photons/m²/s)",sp=3)
 
 
     
-![png](doc/src/output_6_0.png)
+![png](docs/src/output_6_0.png)
     
 
 
@@ -120,7 +120,7 @@ plot!(results.time,total_nitrogen,ylabel="Total Nitrogen (gN)",sp=3)
 
 
     
-![png](doc/src/output_15_0.png)
+![png](docs/src/output_15_0.png)
     
 
 
@@ -188,7 +188,7 @@ plot!(ylabel="Area/dm²",sp=1,legend=:bottomright);plot!(sp=2,xlabel="Day",ylabe
 
 
     
-![png](doc/src/output_26_0.png)
+![png](docs/src/output_26_0.png)
     
 
 
@@ -205,13 +205,7 @@ hms=[
 plot!(hms...,layout=grid(1,3),size=(1000,200))
 ```
 
-![png](doc/src/output_28_0.png)
+![png](docs/src/output_28_0.png)
 
 ## Documentation
-The code currently has (hopefully) accurate docstrings which should explain how everything works. If you would like to view this locally like a readthedocs page execute:
-```
->cd doc
->julia make.jl
-```
-You will then find documentation at doc/build/index.html
-Please don't push this to the repository, it will eventually go in another branch.
+Documentation can now be found at [here](https://jagoosw.github.io/Kelp.jl).
