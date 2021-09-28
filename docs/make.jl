@@ -20,4 +20,5 @@ Documenter.makedocs(
 
 deploydocs(
     repo = "github.com/jagoosw/Kelp.jl.git",
+    devbranch = "main"
 )
