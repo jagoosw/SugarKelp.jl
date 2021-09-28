@@ -17,3 +17,7 @@ Documenter.makedocs(
     ],
     format = Documenter.HTML(prettyurls = false)
 )
+
+deploydocs(
+    repo = "github.com/jagoosw/Kelp.jl.git",
+)
