@@ -1,0 +1,6 @@
+name = "KelpDocs"
+authors = ["Jago <jagoosw@protonmail.com>"]
+version = "1.0.0"
+
+[deps]
+Kelp = "7cd05660-c499-409f-9aa8-d8700f4bb051"

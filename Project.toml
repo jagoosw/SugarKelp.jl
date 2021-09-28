@@ -1,12 +1,11 @@
 name = "Kelp"
 uuid = "7cd05660-c499-409f-9aa8-d8700f4bb051"
 authors = ["Jago <jagoosw@protonmail.com>"]
-version = "0.1.0"
+version = "1.0.0"
 
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
+DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"

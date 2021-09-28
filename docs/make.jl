@@ -1,7 +1,7 @@
 using Documenter
 include("../src/Kelp.jl")
 Documenter.makedocs(
-    root = "./",
+    root = "docs",
     source = "src",
     build = "build",
     clean = true,
