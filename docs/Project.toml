@@ -3,4 +3,5 @@ authors = ["Jago <jagoosw@protonmail.com>"]
 version = "1.0.0"
 
 [deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Kelp = "7cd05660-c499-409f-9aa8-d8700f4bb051"
