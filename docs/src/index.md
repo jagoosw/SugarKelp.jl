@@ -1,4 +1,6 @@
 # Kelp.jl
+[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/Kelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/Kelp.jl)[![codecov](https://codecov.io/gh/jagoosw/Kelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/Kelp.jl)
+
 [Kelp.jl](https://github.com/jagoosw/Kelp.jl)  is an implimentation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
 The main way to solve a single frond is `Kelp.solvekelp` and grids can be solved by `Kelp.solvegrid`.
@@ -212,4 +214,4 @@ The discrepancies may be down to the inaccuracy of reporting of the model parame
 
 Changes to the parameters from those published are detailed [here](https://github.com/jagoosw/Kelp/blob/master/changes.pdf).
 
-## Check on the right for function documentation
+## Check on the sidebar for function documentation
