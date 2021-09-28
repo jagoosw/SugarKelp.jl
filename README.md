@@ -4,7 +4,7 @@ Implementation of the [Broch and Slagstad, 2012 model of the growth and composit
 
 The main way to solve a single frond is `Kelp.solvekelp` and grids can be solved by `Kelp.solvegrid`.
 
-Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/Kelp/blob/main/changes.pdf).
+Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/Kelp/blob/main/info/changes.pdf).
 
 The package is not yet registered so to use, download this repository and then install the dependencies by executing (from this directory):
 ```
