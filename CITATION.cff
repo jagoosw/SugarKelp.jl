@@ -1,0 +1,17 @@
+# YAML 1.2
+---
+abstract: "Implementation of the Broch and Slagstad, 2012 model of the growth and composition of Saccharina latissima kelp."
+authors: 
+  -
+    affiliation: "St John's College Cambridge, University of Cambridge"
+    family-names: "Strong-Wright"
+    given-names: Jago
+cff-version: "1.1.0"
+date-released: 2021-09-28
+doi: "10.5281/zenodo.5534215 "
+license: MIT
+message: "Please cite the following works when using this software."
+repository-code: "https://github.com/jagoosw/Kelp.jl"
+title: "Kelp.jl"
+version: "v1.0"
+...

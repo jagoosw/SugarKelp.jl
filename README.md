@@ -1,5 +1,7 @@
 # Kelp.jl
 
+[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)
+
 Implementation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_ kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
 The main way to solve a single frond is `Kelp.solvekelp` and grids can be solved by `Kelp.solvegrid`.
