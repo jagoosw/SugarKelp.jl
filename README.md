@@ -1,6 +1,9 @@
 # Kelp.jl
 
+<p  align="middle"><img src="docs/src/assets/logo.png" alt="Logo" width="100" /> 
+
 [![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/Kelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/Kelp.jl)[![codecov](https://codecov.io/gh/jagoosw/Kelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/Kelp.jl)
+</p>
 
 Implementation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_ kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
@@ -208,4 +211,4 @@ plot!(hms...,layout=grid(1,3),size=(1000,200))
 ![png](docs/src/output_28_0.png)
 
 ## Documentation
-Documentation can now be found at [here](https://jagoosw.github.io/Kelp.jl).
+Documentation can now be found [here](https://jagoosw.github.io/Kelp.jl).
