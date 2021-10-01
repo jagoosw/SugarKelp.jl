@@ -41,7 +41,7 @@ Setting the forcing variables, these would normally be loaded from a data set bu
 - time - day corresponding to forcing data in days since january first (year is arbitary). This **must** be a float rather than an integer or ODE solving library fails
 - temp - temperature in degrees C
 - no3 - nitrate concentration in mmol/m³
-- irr - PAR irradiance in μmol photons/m^2/s
+- irr - PAR irradiance in mol photons/m²/day
 - u - water velocity in m/s
 
 
@@ -59,7 +59,7 @@ u = repeat([0.15],400);
 plot(layout=grid(1,3),size=(1000,250),legend=false)
 plot!(time,temp,ylabel="Temp (°C)",sp=1)
 plot!(time,no3,xlabel="Day",ylabel="Nitrate concentration (mmol/m³)",sp=2)
-plot!(time,irr,ylabel="PAR (μmol photons/m²/s)",sp=3)
+plot!(time,irr,ylabel="PAR (mol photons/m²/day)",sp=3)
 ```
 
 

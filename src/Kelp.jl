@@ -111,7 +111,7 @@ Solves Equation 10, the gross photosynthesis.
 
 Parameters:
 - `temp`: temperature /°C
-- `irr`: irradiance /μmol photons/m^2/s
+- `irr`: irradiance /mol photons/m²/day
 
 Returns: gross photosynthesis function
 """
@@ -157,7 +157,7 @@ Parameters:
 - `c`: carbon reserve /gC/gSW
 - `u`: water speed /m/s
 - `temp`: temperature /°C
-- `irr`: irradiance / μmol photons/m^2/s 
+- `irr`: irradiance / mol photons/m²/day
 - `ex_n`: external nitrate concentration /mmol m^3
 - `λ`: normalised change in day length
 - `resp_model`: choice of resparation model (see Kelp.r)
