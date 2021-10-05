@@ -33,7 +33,7 @@ const T_APH = 1414.87# 1516.7#25924    # Arrhenius temperature for photosynthesi
 const T_APL = 4547.89# 4388.5#27774    # Arrhenius temperature for photosynthesis at low end of range (K)
 const T_AR = (1 / T_R1 - 1 / T_R2)^(-1) * log(R_2 / R_1)     # Arrhenius temperature for respiration (K)
 const U_0p65 = 0.03    # Current speed at which J = 0.65Jmax (m/s)
-const K_X = 4          # Nitrate uptake half saturation constant, con1verted to mmol/L
+const K_X = 4          # Nitrate uptake half saturation constant, converted to mmol/m^3
 
 const R_A=1.11e-4*24
 const R_B=5.57e-5*24
