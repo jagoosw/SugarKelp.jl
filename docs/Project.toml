@@ -1,10 +1,10 @@
-name = "KelpDocs"
+name = "SugarKelpDocs"
 authors = ["Jago <jagoosw@protonmail.com>"]
 version = "1.0.0"
 
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-Kelp = "7cd05660-c499-409f-9aa8-d8700f4bb051"
+SugarKelp = "7cd05660-c499-409f-9aa8-d8700f4bb051"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"

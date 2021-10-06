@@ -1,34 +1,31 @@
-# Kelp.jl
+# SugarKelp.jl
 
 <p  align="middle"><img src="docs/src/assets/logo.png" alt="Logo" width="100" /> 
 
-[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/Kelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/Kelp.jl)[![codecov](https://codecov.io/gh/jagoosw/Kelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/Kelp.jl)
+[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/SugarKelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/SugarKelp.jl)[![codecov](https://codecov.io/gh/jagoosw/SugarKelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/SugarKelp.jl)
 </p>
 
 Implementation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_ kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
-The main way to solve a single frond is `Kelp.solvekelp` and grids can be solved by `Kelp.solvegrid`.
+The main way to solve a single frond is `SugarKelp.solve` and grids can be solved by `SugarKelp.solvegrid`.
 
-Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/Kelp/blob/main/info/changes.pdf).
+Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/SugarKelp.jl/blob/main/info/changes.pdf).
 
-The package is not yet registered so to use, download this repository and then install the dependencies by executing (from this directory):
+The package is not yet registered so to use  install from this repo:
 ```
 >julia
-julia> import Pkg
-julia> ] activate .
-julia> instantiate
+julia> ] add add https://github.com/jagoosw/SugarKelp.jl
 ```
 
 ## Examples
 ## Running a model
-These examples for running the model both at a single point and on a grid can be found in [examples.ipynb](https://github.com/jagoosw/Kelp.jl/blob/main/examples/example.ipynb).
+These examples for running the model both at a single point and on a grid can be found in [examples.ipynb](https://github.com/jagoosw/SugarKelp.jl/blob/main/examples/example.ipynb).
 
 ### Example 1 - Single Point
 
 
 ```julia
-import Pkg; Pkg.activate(".")
-using Kelp, Plots, Interpolations;pyplot();
+using SugarKelp, Plots, Interpolations;pyplot();
 ```
 
 Set initial conditions and parameters
@@ -91,7 +88,7 @@ Now the model can be run, the parameter file must be passed and in this run the 
 
 
 ```julia
-solution, results = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, "src/parameters/2013.jl",2);
+solution, results = SugarKelp.solve(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, "src/parameters/2013.jl",2);
 ```
 
 Solutions contains the raw output of the ODE solver while results is refactored into a dataframe (this can optionally be turned off for an array to be returned)
@@ -160,7 +157,7 @@ This function automatically parallelised to however many threads you start Julia
 
 
 ```julia
-@time results = Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, arr_no3, arr_temp, arr_u, (arr_irr, arr_t, NaN), (nothing, nothing, nothing), arr_beta, "src/parameters/2013.jl", 2);
+@time results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, arr_no3, arr_temp, arr_u, (arr_irr, arr_t, NaN), (nothing, nothing, nothing), arr_beta, "src/parameters/2013.jl", 2);
 ```
 ...
 
@@ -211,4 +208,4 @@ plot!(hms...,layout=grid(1,3),size=(1000,200))
 ![png](docs/src/output_28_0.png)
 
 ## Documentation
-Documentation can now be found [here](https://jagoosw.github.io/Kelp.jl).
+Documentation can now be found [here](https://jagoosw.github.io/SugarKelp.jl).

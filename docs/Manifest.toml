@@ -331,9 +331,9 @@ git-tree-sha1 = "8076680b162ada2a031f707ac7b4953e30667a37"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.2"
 
-[[Kelp]]
+[[SugarKelp]]
 deps = ["CSV", "DataFrames", "DiffEqBase", "DiffEqCallbacks", "Interpolations", "OrdinaryDiffEq", "RecursiveArrayTools", "Roots", "Test"]
-path = "/home/jago/Documents/Projects/Kelp.jl"
+path = "/home/jago/Documents/Projects/SugarKelp.jl"
 uuid = "7cd05660-c499-409f-9aa8-d8700f4bb051"
 version = "1.0.0"
 
