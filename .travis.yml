@@ -4,11 +4,23 @@ julia:
 codecov: true
 jobs:
   include:
-    - stage: "Documentation"
+    - stage: "Autotests and Docs"
       julia: 1.6
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
-                                               Pkg.instantiate()'
-        - julia --project=docs/ docs/make.jl
-      after_success: skip
+        - julia --project --check-bounds=yes -e 'import Pkg; Pkg.build(); Pkg.test("SugarKelp"; coverage=true)'
+
+      # After successful build submit coverage report and deploy updated documentation
+      # But limit deployment to the linux worker so this is done only once.
+      after_success:
+        # Install required packages for coverage and documentation
+        - julia --project -e 'import Pkg; Pkg.add("Coverage");'
+        - julia --project -e 'import Pkg; Pkg.add("Documenter"); Pkg.add("DocumenterTools");'
+      #  - julia --project -e 'import Pkg; Pkg.add("Plots");'
+      #  - julia --project -e 'import Pkg; Pkg.add("LaTeXStrings")'
+
+        # Submit test coverage report
+        - julia --project -e 'using Coverage; Coveralls.submit(Coveralls.process_folder())'
+
+        # Build and deploy documentation
+        - julia --project ./docs/make.jl
