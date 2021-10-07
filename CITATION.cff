@@ -7,8 +7,8 @@ authors:
     family-names: "Strong-Wright"
     given-names: Jago
 cff-version: "1.1.0"
-date-released: 2021-09-28
-doi: "10.5281/zenodo.5534215 "
+date-released: 2021-10-07
+doi: "10.5281/zenodo.5554954"
 license: MIT
 message: "Please cite the following works when using this software."
 repository-code: "https://github.com/jagoosw/SugarKelp.jl"
