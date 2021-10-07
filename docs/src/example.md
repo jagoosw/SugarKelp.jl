@@ -3,7 +3,7 @@
 
 ```julia
 import Pkg; Pkg.activate("../")
-using Kelp, Plots, Interpolations;pyplot();
+using SugarKelp, Plots, Interpolations;pyplot();
 ```
 
 Set initial conditions and parameters
@@ -66,7 +66,7 @@ Now the model can be run, the parameter file must be passed and in this run the 
 
 
 ```julia
-solution, results = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, "../src/parameters/2013.jl",2);
+solution, results = SugarKelp.solve(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, "../src/parameters/2013.jl",2);
 ```
 
 Solutions contains the raw output of the ODE solver while results is refactored into a dataframe (this can optionally be turned off for an array to be returned)
@@ -141,41 +141,41 @@ This function automatically paralalises to however many threads you start julia 
 
 
 ```julia
-@time results = Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, arr_no3, arr_temp, arr_u, (arr_irr, arr_t, NaN), (nothing, nothing, nothing), arr_beta, "../src/parameters/2013.jl", 2);
+@time results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, arr_no3, arr_temp, arr_u, (arr_irr, arr_t, NaN), (nothing, nothing, nothing), arr_beta, "../src/parameters/2013.jl", 2);
 ```
 
     ┌ Info: At level 1
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 2
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 3
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 4
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 5
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 6
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 7
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 8
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 9
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 10
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 11
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 12
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 13
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 14
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 15
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
     ┌ Info: At level 16
-    └ @ Kelp /home/jago/Documents/Projects/Kelp.jl/src/Kelp.jl:337
+    └ @ SugarKelp /home/jago/Documents/Projects/SugarKelp.jl/src/SugarKelp.jl:337
 
 
      32.622805 seconds (135.82 M allocations: 4.460 GiB, 2.42% gc time, 25.27% compilation time)

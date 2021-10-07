@@ -1,4 +1,4 @@
-module Kelp
+module SugarKelp
 using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, DataFrames
 # Input parameters
 # t: time (days)
@@ -8,12 +8,12 @@ using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, Da
 # u: Current speed (relative to kelp) (m/s)
 
 # Variables
-# a: Frond area of individual kelp (dm^2)
+# a: Frond area of individual kelp(dm^2)
 # n: Nitrogen reserve relative to dry weight (gN/(g sw))
 # c: Carbon reserve relative to dry weight (gC/(g sw))
 
 """
-    Kelp.eval_μ(a,n,c,temp,λ)
+    SugarKelp.eval_μ(a,n,c,temp,λ)
 
 Solves Equation 2, the specific growth rate.
 
@@ -27,12 +27,12 @@ Parameters:
 Returns: specific growth rate
 
 Notes:
-- Names eval_μ because it looks better in Kelp.equations to have μ and you can't reuse it
+- Names eval_μ because it looks better in SugarKelp.equations to have μ and you can't reuse it
 """
 eval_μ(a,n,c,temp,λ) = f_area(a) * f_temp(temp) * f_photo(λ) * min(1 - N_min / n, 1 - C_min / c)
 
 """
-    Kelp.f_area(a)
+    SugarKelp.f_area(a)
 
 Solves Equation 3, the effect of area on growth
 
@@ -43,7 +43,7 @@ Returns: effect of area on growth
 f_area(a) = m_1 * exp(-(a / A_0)^2) + m_2
 
 """
-    Kelp.f_temp(temp)
+    SugarKelp.f_temp(temp)
 
 Solves Equation 4, the effect of temperature on growth
 
@@ -66,7 +66,7 @@ function f_temp(temp)
 end
 
 """
-    Kelp.f_photo(λ)
+    SugarKelp.f_photo(λ)
 
 Solves Equation 5, the seasonal influence on growth rate
 
@@ -77,7 +77,7 @@ Returns: seasonal influence on growth
 f_photo(λ) = a_1 * (1 + sign(λ) * abs(λ)^.5) + a_2
 
 """
-    Kelp.ν(a)
+    SugarKelp.ν(a)
 
 Solves Equation 6, the specific frond erosion rate.
 
@@ -88,7 +88,7 @@ Returns: specific frond erosion rate
 ν(a) = 1e-6 * exp(ϵ * a) / (1 + 1e-6 * (exp(ϵ * a) - 1))
 
 """
-    Kelp.eval_j(ex_n,n,u)
+    SugarKelp.eval_j(ex_n,n,u)
 
 Solves Equation 8, the specific nitrate uptake rate.
 
@@ -100,12 +100,12 @@ Parameters:
 Returns: specific nitrate uptake rate
 
 Notes:
-- Names eval_j because it looks better in Kelp.equations to have j and you can't reuse it
+- Names eval_j because it looks better in SugarKelp.equations to have j and you can't reuse it
 """
 eval_j(ex_n,n,u) = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65))
 
 """
-    Kelp.p(temp,irr)
+    SugarKelp.p(temp,irr)
 
 Solves Equation 10, the gross photosynthesis.
 
@@ -124,7 +124,7 @@ function p(temp, irr)
 end
 
 """
-    Kelp.r(temp,μ,j,resp_model)
+    SugarKelp.r(temp,μ,j,resp_model)
 
 Solves Equation 14 (2012) if resp_model=1, or Equation 2 (2013) if resp_model=2
 
@@ -147,7 +147,7 @@ end
 e(c) = 1 - exp(γ * (C_min - c))
 
 """
-    Kelp.equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
+    SugarKelp.equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
 
 Solves the papers main equations.
 
@@ -160,7 +160,7 @@ Parameters:
 - `irr`: irradiance / mol photons/m²/day
 - `ex_n`: external nitrate concentration /mmol m^3
 - `λ`: normalised change in day length
-- `resp_model`: choice of resparation model (see Kelp.r)
+- `resp_model`: choice of resparation model (see SugarKelp.r)
 - `dt`: timestep length /days
 
 Returns:
@@ -190,7 +190,7 @@ function equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
 end
 
 """
-    Kelp.solver!(y, params, t)
+    SugarKelp.solver!(y, params, t)
 
 Interface for OrdinaryDiffEq library, extracts current enviromental variable values and solves equations for each timestep.
 
@@ -237,7 +237,7 @@ function solver!(y::Vector{Float64}, params, t::Float64)
 end
 
 """
-    Kelp.solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
+    SugarKelp.solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
 
 Solves the model for some set of parametetrs and returns the ODE library solution as well as a dataframe of the useful results.
 
@@ -261,7 +261,7 @@ Returns:
 - `solution`: the ODE library solution
 - `results`: dataframe or array of area/nitrogen reserve/carbon reserve/total nitrate update. All others useful quantities can be easily derived.
 """
-function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true, λ_arr=nothing)
+function solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true, λ_arr=nothing)
     include(params)
     if λ_arr==nothing
         λ_arr = gen_λ(lat)
@@ -286,7 +286,7 @@ function solvekelp(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../s
 end
 
 """
-    Kelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, att = nothing, params="src/parameters/origional.jl", resp_model=1, dt=1, progress=true)
+    SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, att = nothing, params="src/parameters/origional.jl", resp_model=1, dt=1, progress=true)
 Solve the model for a (spacially) fixed grid of inputs.
 
 Parameters:
@@ -365,7 +365,7 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
                 else
                     irr_itp = Interpolations.LinearInterpolation(arr_time, par_itp.(arr_time) .* att_vals, extrapolation_bc=Flat())
                 end
-                solution = Kelp.solvekelp(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt, false);
+                solution = SugarKelp.solve(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, params, resp_model, dt, false);
 
                 all_results[:,i,j,k,1:size(solution)[1]] = reshape(solution', size(solution)[2], 1, 1, 1, size(solution)[1])
     end
@@ -375,7 +375,7 @@ function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float
 end
 
 """
-    Kelp.extract_valid(raw,raw_time,fill)
+    SugarKelp.extract_valid(raw,raw_time,fill)
 
 Extracts the valid values from an array by checking against a fill value and returns the valids and corresponding time.
 
@@ -400,7 +400,7 @@ function extract_valid(raw, raw_time, fill)
 end
 
 """
-    Kelp.gen_λ(lat)
+    SugarKelp.gen_λ(lat)
 
 Generates λ as described in Model desctiptions/Main equations/Photoperiodic effect (page 763) in the origional paper.
 
@@ -418,7 +418,7 @@ function gen_λ(lat)
     return λ ./ findmax(λ)[1]
 end
 """
-    Kelp.get_ind(val, list, tol)
+    SugarKelp.get_ind(val, list, tol)
 Function that finds the index in the list with the closest value to val. Error is thrown if no result is within tollerance, tol.
 
 Parameters:
@@ -441,7 +441,7 @@ function get_ind(val, list, tol)
 end
 
 """
-    Kelp.interp_deps(arr, origional_depths, desired_depths, invalid_val)
+    SugarKelp.interp_deps(arr, origional_depths, desired_depths, invalid_val)
 Function to interpolate a 4D array in the last dimension. Useful for lineaising the depth steps of the arrays
 from Copurnicus as they have increasingly corse step sizes.
 

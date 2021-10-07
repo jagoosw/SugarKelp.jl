@@ -1,5 +1,5 @@
 # Function Documentation
 ```@autodocs
-Modules = [Kelp]
+Modules = [SugarKelp]
 Order = [:function, :type]
 ```

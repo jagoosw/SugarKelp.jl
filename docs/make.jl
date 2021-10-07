@@ -1,15 +1,15 @@
 using Documenter
-include("../src/Kelp.jl")
+include("../src/SugarKelp.jl")
 Documenter.makedocs(
     root = "docs",
     source = "src",
     build = "build",
     clean = true,
     doctest = true,
-    modules = Module[Kelp],
-    repo = "https://github.com/jagoosw/Kelp.jl",
+    modules = Module[SugarKelp],
+    repo = "https://github.com/jagoosw/SugarKelp.jl",
     highlightsig = true,
-    sitename = "Kelp.jl Documentation",
+    sitename = "SugarKelp.jl Documentation",
     expandfirst = [],
     pages = [
         "Index" => "index.md",
@@ -19,6 +19,6 @@ Documenter.makedocs(
 )
 
 deploydocs(
-    repo = "github.com/jagoosw/Kelp.jl.git",
+    repo = "github.com/jagoosw/SugarKelp.jl.git",
     devbranch = "main"
 )
