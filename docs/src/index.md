@@ -7,11 +7,7 @@ The main way to solve a single frond is `SugarKelp.solve` and grids can be solve
 
 Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/SugarKelp/blob/main/changes.pdf).
 
-The package is not yet registered so to use install from this repo:
-```
->julia
-julia> ] add add https://github.com/jagoosw/SugarKelp.jl
-```
+This package is now available from the registry so can be installed by `import Pkg;Pkg.add("SugarKelp")`. Alternativly, you can install from this repo (which may be slightly updated) by `import Pkg;Pkg.add("https://github.com/jagoosw/SugarKelp.jl")`.
 ## Running a model
 These examples for running the model both at a single point and on a grid can be found in [examples.ipynb](https://github.com/jagoosw/SugarKelp.jl/blob/main/examples/example.ipynb).
 

@@ -2,7 +2,7 @@
 
 <p  align="middle"><img src="docs/src/assets/logo.png" alt="Logo" width="100" /> 
 
-[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/SugarKelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/SugarKelp.jl)[![codecov](https://codecov.io/gh/jagoosw/SugarKelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/SugarKelp.jl)
+[![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/SugarKelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/SugarKelp.jl)[![codecov](https://codecov.io/gh/jagoosw/SugarKelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/SugarKelp.jl)[![pkgeval](https://juliahub.com/docs/SugarKelp/pkgeval.svg)](https://juliahub.com/ui/Packages/SugarKelp/Uh2dO)[![version](https://juliahub.com/docs/SugarKelp/version.svg)](https://juliahub.com/ui/Packages/SugarKelp/Uh2dO)
 </p>
 
 Implementation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_ kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
@@ -11,11 +11,7 @@ The main way to solve a single frond is `SugarKelp.solve` and grids can be solve
 
 Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/SugarKelp.jl/blob/main/info/changes.pdf).
 
-The package is not yet registered so to use  install from this repo:
-```
->julia
-julia> ] add add https://github.com/jagoosw/SugarKelp.jl
-```
+This package is now available from the registry so can be installed by `import Pkg;Pkg.add("SugarKelp")`. Alternatively, you can install from this repo (which may be slightly updated) by `import Pkg;Pkg.add("https://github.com/jagoosw/SugarKelp.jl")`.
 
 ## Examples
 ## Running a model
