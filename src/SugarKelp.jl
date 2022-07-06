@@ -11,9 +11,9 @@ using RecursiveArrayTools, DiffEqBase, OrdinaryDiffEq, Roots, Interpolations, Da
 # a: Frond area of individual kelp(dm^2)
 # n: Nitrogen reserve relative to dry weight (gN/(g sw))
 # c: Carbon reserve relative to dry weight (gC/(g sw))
-
+include("parameters.jl")
 """
-    SugarKelp.eval_μ(a,n,c,temp,λ)
+    SugarKelp.eval_μ(a,n,c,temp,λ,params)
 
 Solves Equation 2, the specific growth rate.
 
@@ -23,35 +23,40 @@ Parameters:
 - `c`: carbon reserve /gC/gSW
 - `temp`: temperature /°C
 - `λ`: normalised change in day length
+- `params`: NamedTuple of model parameters
 
 Returns: specific growth rate
 
 Notes:
 - Names eval_μ because it looks better in SugarKelp.equations to have μ and you can't reuse it
 """
-eval_μ(a,n,c,temp,λ) = f_area(a) * f_temp(temp) * f_photo(λ) * min(1 - N_min / n, 1 - C_min / c)
+eval_μ(a,n,c,temp,λ,params) = f_area(a,params) * f_temp(temp,params) * f_photo(λ,params) * min(1 - params.N_min / n, 1 - params.C_min / c)
 
 """
-    SugarKelp.f_area(a)
+    SugarKelp.f_area(a,params)
 
 Solves Equation 3, the effect of area on growth
 
-Parameters: `a`, area /dm^2
+Parameters: 
+- `a`, area /dm^2
+- `params`: NamedTuple of model parameters
 
 Returns: effect of area on growth
 """
-f_area(a) = m_1 * exp(-(a / A_0)^2) + m_2
+f_area(a,params) = params.m_1 * exp(-(a / params.A_0)^2) + params.m_2
 
 """
-    SugarKelp.f_temp(temp)
+    SugarKelp.f_temp(temp,params)
 
 Solves Equation 4, the effect of temperature on growth
 
-Parameters: `temp`: temperature /°C
+Parameters: 
+- `temp`: temperature /°C
+- `params`: NamedTuple of model parameters
 
 Returns: effect of temperature on growth
 """
-function f_temp(temp)
+function f_temp(temp,params)
     if -1.8 <= temp < 10 
         return 0.08 * temp + 0.2
     elseif 10 <= temp <= 15
@@ -66,29 +71,33 @@ function f_temp(temp)
 end
 
 """
-    SugarKelp.f_photo(λ)
+    SugarKelp.f_photo(λ,params)
 
 Solves Equation 5, the seasonal influence on growth rate
 
-Parameters: `λ`: normalised change in day length
+Parameters: 
+- `λ`: normalised change in day length
+- `params`: NamedTuple of model parameters
 
 Returns: seasonal influence on growth
 """
-f_photo(λ) = a_1 * (1 + sign(λ) * abs(λ)^.5) + a_2
+f_photo(λ,params) = params.a_1 * (1 + sign(λ) * abs(λ)^.5) + params.a_2
 
 """
-    SugarKelp.ν(a)
+    SugarKelp.ν(a,params)
 
 Solves Equation 6, the specific frond erosion rate.
 
-Parameters: `a`: area /dm^2
+Parameters: 
+- `a`: area /dm^2
+- `params`: NamedTuple of model parameters
 
 Returns: specific frond erosion rate
 """
-ν(a) = 1e-6 * exp(ϵ * a) / (1 + 1e-6 * (exp(ϵ * a) - 1))
+ν(a,params) = 1e-6 * exp(params.ϵ * a) / (1 + 1e-6 * (exp(params.ϵ * a) - 1))
 
 """
-    SugarKelp.eval_j(ex_n,n,u)
+    SugarKelp.eval_j(ex_n,n,u,params)
 
 Solves Equation 8, the specific nitrate uptake rate.
 
@@ -96,35 +105,37 @@ Parameters:
 - `ex_n`: external nitrate concentration /mmol/m^3
 - `n`: nitrogen reserve /gN/gSW
 - `u`: water speed /m/s
+- `params`: NamedTuple of model parameters
 
 Returns: specific nitrate uptake rate
 
 Notes:
 - Names eval_j because it looks better in SugarKelp.equations to have j and you can't reuse it
 """
-eval_j(ex_n,n,u) = J_max * (ex_n / (K_X + ex_n)) * ((N_max - n) / (N_max - N_min)) * (1 - exp(-u / U_0p65))
+eval_j(ex_n,n,u,params) = params.J_max * (ex_n / (params.K_X + ex_n)) * ((params.N_max - n) / (params.N_max - params.N_min)) * (1 - exp(-u / params.U_0p65))
 
 """
-    SugarKelp.p(temp,irr)
+    SugarKelp.p(temp,irr,params)
 
 Solves Equation 10, the gross photosynthesis.
 
 Parameters:
 - `temp`: temperature /°C
 - `irr`: irradiance /mol photons/m²/day
+- `params`: NamedTuple of model parameters
 
 Returns: gross photosynthesis function
 """
-function p(temp, irr)
-    p_max = P_1 * exp(T_AP / T_P1 - T_AP / (temp + 273.15)) / (1 + exp(T_APL / (temp + 273.15) - T_APL / T_PL) + exp(T_APH / T_PH - T_APH / (temp + 273.15)))
-    β_func(x) = p_max - (α * I_sat / log(1 + α / x)) * (α / (α + x)) * (x / (α + x))^(x / α)
+function p(temp, irr, params)
+    p_max = params.P_1 * exp(params.T_AP / params.T_P1 - params.T_AP / (temp + 273.15)) / (1 + exp(params.T_APL / (temp + 273.15) - params.T_APL / params.T_PL) + exp(params.T_APH / params.T_PH - params.T_APH / (temp + 273.15)))
+    β_func(x) = p_max - (params.α * params.I_sat / log(1 + params.α / x)) * (params.α / (params.α + x)) * (x / (params.α + x))^(x / params.α)
     β = find_zero(β_func, (0, 0.1), Bisection())
-    p_s = α * I_sat / log(1 + α / β)
-    return p_s * (1 - exp(-α * irr / p_s)) * exp(-β * irr / p_s) 
+    p_s = params.α * params.I_sat / log(1 + params.α / β)
+    return p_s * (1 - exp(-params.α * irr / p_s)) * exp(-β * irr / p_s) 
 end
 
 """
-    SugarKelp.r(temp,μ,j,resp_model)
+    SugarKelp.r(temp,μ,j,resp_model,params)
 
 Solves Equation 14 (2012) if resp_model=1, or Equation 2 (2013) if resp_model=2
 
@@ -133,21 +144,34 @@ Parameters:
 - `μ`: specific growth rate
 - `j`: specific nitrate uptake rate
 - `resp_model`: choice of resparation model (see description)
+- `params`: NamedTuple of model parameters
 
 Returns: respiration function
 """
-function r(temp, μ, j, resp_model)
+function r(temp, μ, j, resp_model,params)
     if resp_model == 1
-        return R_1 * exp(T_AR / T_R1 - T_AR / (temp + 273.15)) # temperature dependent respiration
+        return params.R_1 * exp(params.T_AR / params.T_R1 - params.T_AR / (temp + 273.15)) # temperature dependent respiration
     elseif resp_model == 2
-        return (R_A * (μ / μ_max + j / J_max) + R_B) * exp(T_AR / T_R1 - T_AR / (temp + 273.15))
+        return (params.R_A * (μ / params.μ_max + j / params.J_max) + params.R_B) * exp(params.T_AR / params.T_R1 - params.T_AR / (temp + 273.15))
     end
 end
 
-e(c) = 1 - exp(γ * (C_min - c))
+"""
+    SugarKelp.e(c,params)
+
+Solves for the exudation rate
+
+Parameters:
+- `c`: carbon reserve /gC/gSW
+- `params`: NamedTuple of model parameters
+
+Returns: exudation function
+"""
+
+e(c,params) = 1 - exp(params.γ * (params.C_min - c))
 
 """
-    SugarKelp.equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
+    SugarKelp.equations(t, a, n, c, u, temp, irr, ex_n, λ, resp_model, dt, params)
 
 Solves the papers main equations.
 
@@ -162,6 +186,7 @@ Parameters:
 - `λ`: normalised change in day length
 - `resp_model`: choice of resparation model (see SugarKelp.r)
 - `dt`: timestep length /days
+- `params`: NamedTuple of model parameters
 
 Returns:
 - `da`: results of equation 1, the area rate
@@ -169,21 +194,21 @@ Returns:
 - `dc`: results of equation 9, the carbon rate
 - `j`: the specific nitrate uptake rate
 """
-function equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
-    μ = eval_μ(a, n, c, temp, λ)
-    j = eval_j(ex_n, n, u)
+function equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt, params)
+    μ = eval_μ(a, n, c, temp, λ, params)
+    j = eval_j(ex_n, n, u, params)
 
     # Equation 1
-    da = (μ - ν(a)) * a
+    da = (μ - ν(a, params)) * a
     # Equation 7
-    dn = j / K_A - μ * (n + N_struct)
+    dn = j / params.K_A - μ * (n + params.N_struct)
     # Equation 9
-    dc = (p(temp, irr) * (1 - e(c)) - r(temp, μ, j, resp_model)) / K_A - μ * (c + C_struct)
+    dc = (p(temp, irr, params) * (1 - e(c, params)) - r(temp, μ, j, resp_model, params)) / params.K_A - μ * (c + params.C_struct)
 
     # "Extreme carbon limitation"
-    if c + dc < C_min
-        da -= (a * (C_min - c) / C_struct) * .5 * dt
-        dc = (C_min - c) * .5 * dt
+    if c + dc < params.C_min
+        da -= (a * (params.C_min - c) / params.C_struct) * .5 * dt
+        dc = (params.C_min - c) * .5 * dt
     end
 
     return da, dn, dc, j
@@ -204,6 +229,7 @@ Parameters:
     - `λ_arr`: array of the normalised change in day length
     - `resp_model`: the choice of respiration model, 1 is the origional from the 2012 paper and 2 is the modified version in 2013
     - `dt`: the time step length, this is important as it is used in the "extreme carbon limit" part of the equations, see NB.
+    - `params`: NamedTuple of model parameters
 - `t`: the current time (with respect to the time in the interpolations)
 
 Returns: array of da,dn,dc,j*a - the rate of a/n/c and the nitrate uptake rate
@@ -218,7 +244,7 @@ function solver!(y::Vector{Float64}, params, t::Float64)
     a, n, c = y
 
     if a > 0
-        u_arr, temp_arr, irr_arr, ex_n_arr, λ_arr, resp_model, dt = params
+        u_arr, temp_arr, irr_arr, ex_n_arr, λ_arr, resp_model, dt, params = params
 
         u = u_arr(t)::Float64
         temp = temp_arr(t)::Float64
@@ -228,7 +254,7 @@ function solver!(y::Vector{Float64}, params, t::Float64)
         d = trunc(Int, mod(floor(t), 365) + 1) 
         λ = λ_arr[d] 
 
-        da, dn, dc, j = equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt)
+        da, dn, dc, j = equations(a, n, c, u, temp, irr, ex_n, λ, resp_model, dt, params)
 
     else
         da, dn, dc, j = 0, 0, 0, 0 
@@ -237,7 +263,7 @@ function solver!(y::Vector{Float64}, params, t::Float64)
 end
 
 """
-    SugarKelp.solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true)
+    SugarKelp.solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params=bs2012params, resp_model=1, dt=1, dataframe=true)
 
 Solves the model for some set of parametetrs and returns the ODE library solution as well as a dataframe of the useful results.
 
@@ -251,7 +277,7 @@ Parameters:
 - `a_0`: initial area
 - `n_0`: initial nitrogen reserve (gN/gSW)
 - `c_0`: initial carbon reserve (gC/gSW)
-- `params`: string of the path to a parameters file, defaults to the 2012 values. Also supplied is 2013 in src/parameters/2013.jl or you can copy and vary them
+- `params`: NamedTuple of model parameters, defaults to the 2012 values. Also supplied is 2013 or you can specify your own
 - `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
 - `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
 - `dataframe`: output as a dataframe, default to true. Alternative is an array (faster)
@@ -261,12 +287,11 @@ Returns:
 - `solution`: the ODE library solution
 - `results`: dataframe or array of area/nitrogen reserve/carbon reserve/total nitrate update. All others useful quantities can be easily derived.
 """
-function solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../src/parameters/origional.jl", resp_model=1, dt=1, dataframe=true, λ_arr=nothing)
-    include(params)
+function solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params=bs2012params, resp_model=1, dt=1, dataframe=true, λ_arr=nothing)
     if λ_arr==nothing
         λ_arr = gen_λ(lat)
     end
-    params = (u, temp, irr, ex_n, λ_arr, resp_model, dt)
+    params = (u, temp, irr, ex_n, λ_arr, resp_model, dt, params)
 
     y_0 = vcat(a_0, n_0, c_0, 0)
 
@@ -286,7 +311,7 @@ function solve(t_i, nd, u, temp, irr, ex_n, lat, a_0, n_0, c_0, params="../src/p
 end
 
 """
-    SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, att = nothing, params="src/parameters/origional.jl", resp_model=1, dt=1, progress=true)
+    SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_time, no3, temp, u, par_data, kd_data, att = nothing, params=bs2012params, resp_model=1, dt=1, progress=true)
 Solve the model for a (spacially) fixed grid of inputs.
 
 Parameters:
@@ -311,7 +336,7 @@ Parameters:
     - corresponding time
     - kd fill value
 - `att`: array of light attenuation coefficients (PAR(z)=PAR(z=0)*att) in lon,lat,depth,time. Defaults to nothing and kd is used instead
-- `params`: string of the path to a parameters file, defaults to the 2012 values. Also supplied is 2013 in src/parameters/2013.jl or you can copy and vary them
+- `params`: NamedTuple of model parameters, defaults to the 2012 values. Also supplied is 2013 or you can specify your own
 - `resp_model`: choice of respiration model, 1 (default) uses the 2012 version and 2 uses the modifcations from the 2013 paper
 - `dt`: the time step size to use (see equations! note), default is 1 day (seems small enough)
 - `progress`: option to update progress at each level (when multithreading not accurate but useful), defaults to true
@@ -325,7 +350,7 @@ temporally sparse so need to be checked and interpolated in time for each point.
 
 no3,temp and u need to be of the same shape and size and with the values corresponding to the same position/time.
 """
-function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, att=nothing, params::String="../src/parameters/origional.jl", resp_model::Int=1, dt=1, progress::Bool=true)
+function solvegrid(t_i::Float64, nd::Int, a_0::Float64, n_0::Float64, c_0::Float64, arr_lon, arr_lat, arr_dep, arr_time, no3::Array{Float64,4}, temp::Array{Float64,4}, u::Array{Float64,4}, par_data, kd_data, att=nothing, params::NamedTuple=bs2013params, resp_model::Int=1, dt=1, progress::Bool=true)
     # Would like to annotate type for the others but for some reason they making tuples of "Number" doesn't isn't satisfied
     par, par_t, par_fill = par_data;kd, kd_t, kd_fill = kd_data
 
