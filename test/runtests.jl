@@ -1,5 +1,5 @@
 using SugarKelp, Test, Interpolations, DataFrames
-
+include("../src/parameters.jl")
 @info "These tests check if the code has been broken but does not thoroughly check if it produces correct results (for now at least). They are also so monalithic you can't actually tell which bit you've broken."
 
 const arr_lat = [1:3;]
@@ -26,7 +26,7 @@ a_0 = 0.1;n_0 = 0.022;c_0 = 0.3;
 
 # haveing to use 2013 parameters as cant re define constants but need to be able to run with resp_model 2
 @testset "Grid with kd" begin
-    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (kd, kd_t, kd_fill), nothing, "../src/parameters/2013.jl")
+    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (kd, kd_t, kd_fill), nothing, broch2013params)
     @test size(all_results) == (4, length(arr_lon), length(arr_lat), length(arr_dep), nd + 1)
     @test all_results[1,2,3,4,123] ≈ 0.323811260597751
     @test all_results[2,2,3,4,123] ≈ 0.02159999999999999
@@ -35,7 +35,7 @@ a_0 = 0.1;n_0 = 0.022;c_0 = 0.3;
 end
 
 @testset "Grid with beta" begin
-    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta, "../src/parameters/2013.jl")
+    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta,broch2013params)
     @test size(all_results) == (4, length(arr_lon), length(arr_lat), length(arr_dep), nd + 1)
     @test all_results[1,2,3,4,123] ≈ 0.33853815235193496
     @test all_results[2,2,3,4,123] ≈ 0.02159999999999999
@@ -44,7 +44,7 @@ end
 end
 
 @testset "Grid with beta, specifying resp model to be 1" begin
-    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta, "../src/parameters/2013.jl", 1) 
+    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta,broch2013params, 1) 
     @test size(all_results) == (4, length(arr_lon), length(arr_lat), length(arr_dep), nd + 1)
     @test all_results[1,2,3,4,123] ≈ 0.33853815235193496
     @test all_results[2,2,3,4,123] ≈ 0.02159999999999999
@@ -53,7 +53,7 @@ end
 end
 
 @testset "Grid with beta, resp model 2" begin
-    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta, "../src/parameters/2013.jl", 2) 
+    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta,broch2013params, 2) 
     @test size(all_results) == (4, length(arr_lon), length(arr_lat), length(arr_dep), nd + 1)
     @test all_results[1,2,3,4,123] ≈ 0.6949592729765186
     @test all_results[2,2,3,4,123] ≈ 0.0215977671314431
@@ -62,7 +62,7 @@ end
 end 
 
 @testset "Grid with beta, resp model 2, specifying dt=1" begin
-    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta, "../src/parameters/2013.jl", 1, 1) 
+    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta,broch2013params, 1, 1) 
     @test size(all_results) == (4, length(arr_lon), length(arr_lat), length(arr_dep), nd + 1)
     @test all_results[1,2,3,4,123] ≈ 0.33853815235193496
     @test all_results[2,2,3,4,123] ≈ 0.02159999999999999
@@ -71,7 +71,7 @@ end
 end
 @testset "Grid with beta, resp model 2, specifying dt=2" begin
     # This configuration is unstable so area goes below zero and it stops, that would be a useful behaviour to test for but its not done here
-    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta, "../src/parameters/2013.jl", 1, 2) 
+    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta,broch2013params, 1, 2) 
     @test size(all_results) == (4, length(arr_lon), length(arr_lat), length(arr_dep), round(nd / 2 + 1))
     @test all_results[1,2,3,4,5] ≈ 0.19669013321363188
     @test all_results[2,2,3,4,5] ≈ 0.01614271696738769
@@ -79,7 +79,7 @@ end
     @test all_results[4,2,3,4,5] ≈ 0.0011375879549344894
 end
 @testset "Grid with beta, resp model 2, specifying dt=1, specifying to show progress" begin
-    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta, "../src/parameters/2013.jl", 1, 1, true) 
+    all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta,broch2013params, 1, 1, true) 
     @test size(all_results) == (4, length(arr_lon), length(arr_lat), length(arr_dep), nd + 1)
     @test all_results[1,2,3,4,123] ≈ 0.33853815235193496
     @test all_results[2,2,3,4,123] ≈ 0.02159999999999999
@@ -87,7 +87,7 @@ end
     @test all_results[4,2,3,4,123] ≈ 0.003952014050125887
 end
 # This is a test for progress supression but there is no way to actually test it
-# all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta, "../src/parameters/2013.jl", 1, 1, false)
+# all_results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, no3, temp, u, (par, par_t, par_fill), (nothing, nothing, nothing), beta,broch2013params, 1, 1, false)
 
 u_itp = Interpolations.LinearInterpolation(arr_t, u[1,1,1,:])
 temp_itp = Interpolations.LinearInterpolation(arr_t, temp[1,1,1,:])
@@ -95,7 +95,7 @@ no3_itp = Interpolations.LinearInterpolation(arr_t, no3[1,1,1,:])
 par_itp = Interpolations.LinearInterpolation(par_t, par[1,1,:], extrapolation_bc=Flat())
 
 @testset "Single point, dataframe output" begin 
-    solution, a_result = SugarKelp.solve(t_i, nd, u_itp, temp_itp, par_itp, no3_itp, 55, a_0, n_0, c_0, "../src/parameters/2013.jl")
+    solution, a_result = SugarKelp.solve(t_i, nd, u_itp, temp_itp, par_itp, no3_itp, 55, a_0, n_0, c_0,broch2013params)
     @test typeof(a_result) == DataFrames.DataFrame
     @test size(a_result) == (185, 5)
     @test a_result.area[17] ≈ 0.36857308566331204
