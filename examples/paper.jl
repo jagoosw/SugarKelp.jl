@@ -25,7 +25,7 @@ irr_arr = Interpolations.LinearInterpolation(irr_t, irr, extrapolation_bc=Flat()
 
 a_0 = 30;n_0 = 0.01;c_0 = 0.6
 
-solution, results = SugarKelp.solve(t_i, nd, u_arr, temp_arr, irr_arr, no3_arr, lat, a_0, n_0, c_0, "../src/parameters/2013.jl", 1)
+solution, results = SugarKelp.solve(t_i, nd, u_arr, temp_arr, irr_arr, no3_arr, lat, a_0, n_0, c_0, SugarKelp.broch2013params, 1)
 
 # Horrible plotting and loading/inline horriblness from their paper from here down
 pyplot()

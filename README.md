@@ -80,11 +80,10 @@ irr_itp=Interpolations.LinearInterpolation(time,irr)
 u_itp=Interpolations.LinearInterpolation(time,u);
 ```
 
-Now the model can be run, the parameter file must be passed and in this run the respiration model proposed in Broch, 2013 is being used
-
+Now the model can be run, the parameter must be passed as a NamedTuple and in this run the respiration model proposed in Broch, 2013 is being used
 
 ```julia
-solution, results = SugarKelp.solve(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, "src/parameters/2013.jl",2);
+solution, results = SugarKelp.solve(t_i, nd, u_itp, temp_itp, irr_itp, no3_itp, lat, a_0, n_0, c_0, SugarKelp.broch2013params, 2);
 ```
 
 Solutions contains the raw output of the ODE solver while results is refactored into a dataframe (this can optionally be turned off for an array to be returned)
@@ -99,9 +98,8 @@ It is useful to convert the results into total carbon and nitrogen masses (rathe
 
 
 ```julia
-include("src/parameters/2013.jl")
-total_carbon = results.area .* K_A .* (results.carbon .+ C_struct)
-total_nitrogen = results.area .* K_A .* (results.nitrogen .+ N_struct);
+total_carbon = results.area .* SugarKelp.broch2013params.K_A .* (results.carbon .+ SugarKelp.broch2013params.C_struct)
+total_nitrogen = results.area .* SugarKelp.broch2013params.K_A .* (results.nitrogen .+ SugarKelp.broch2013params.N_struct);
 ```
 
 
@@ -153,7 +151,7 @@ This function automatically parallelised to however many threads you start Julia
 
 
 ```julia
-@time results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, arr_no3, arr_temp, arr_u, (arr_irr, arr_t, NaN), (nothing, nothing, nothing), arr_beta, "src/parameters/2013.jl", 2);
+@time results = SugarKelp.solvegrid(t_i, nd, a_0, n_0, c_0, arr_lon, arr_lat, arr_dep, arr_t, arr_no3, arr_temp, arr_u, (arr_irr, arr_t, NaN), (nothing, nothing, nothing), arr_beta, SugarKelp.broch2013params, 2);
 ```
 ...
 

@@ -1,7 +1,7 @@
 name = "SugarKelp"
 uuid = "7cd05660-c499-409f-9aa8-d8700f4bb051"
 authors = ["Jago <jagoosw@protonmail.com>"]
-version = "1.0.0"
+version = "1.1.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
