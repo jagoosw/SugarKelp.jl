@@ -5,6 +5,8 @@
 [![DOI](https://zenodo.org/badge/383172934.svg)](https://zenodo.org/badge/latestdoi/383172934)[![Build Status](https://app.travis-ci.com/jagoosw/SugarKelp.jl.svg?branch=main)](https://app.travis-ci.com/jagoosw/SugarKelp.jl)[![codecov](https://codecov.io/gh/jagoosw/SugarKelp.jl/branch/main/graph/badge.svg?token=JG0D8UY2K8)](https://codecov.io/gh/jagoosw/SugarKelp.jl)[![pkgeval](https://juliahub.com/docs/SugarKelp/pkgeval.svg)](https://juliahub.com/ui/Packages/SugarKelp/Uh2dO)[![version](https://juliahub.com/docs/SugarKelp/version.svg)](https://juliahub.com/ui/Packages/SugarKelp/Uh2dO)
 </p>
 
+> This model is now re-implemented in [OceanBioME.jl](https://github.com/OceanBioME/OceanBioME.jl) where it can be coupled with biogeochemical and physics models. This version is no longer maintained and I recommend you use the `OceanBioME` version unless you only want to solve the kelp model equations with known environmental forcing.
+
 Implementation of the [Broch and Slagstad, 2012 model of the growth and composition of _Saccharina latissima_ kelp](https://link.springer.com/article/10.1007/s10811-011-9695-y).
 
 The main way to solve a single frond is `SugarKelp.solve` and grids can be solved by `SugarKelp.solvegrid`.
@@ -12,8 +14,6 @@ The main way to solve a single frond is `SugarKelp.solve` and grids can be solve
 Changes from the stated parameter values in the paper are detailed in [changes.pdf](https://github.com/jagoosw/SugarKelp.jl/blob/main/info/changes.pdf).
 
 This package is now available from the registry so can be installed by `import Pkg;Pkg.add("SugarKelp")`. Alternatively, you can install from this repo (which may be slightly updated) by `import Pkg;Pkg.add("https://github.com/jagoosw/SugarKelp.jl")`.
-
-> This model is now re-implemented in [OceanBioME.jl](https://github.com/OceanBioME/OceanBioME.jl) where it can be coupled with biogeochemical and physics models
 
 ## Examples
 ## Running a model
